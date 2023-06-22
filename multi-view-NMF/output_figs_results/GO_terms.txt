@@ -1,0 +1,127 @@
+[[1]]
+[1] "cellular respiration"               "ATP metabolic process"             
+[3] "mitochondrion organization"         "nucleotide metabolic process"      
+[5] "ribose phosphate metabolic process"
+
+[[2]]
+[1] "proton transmembrane transport"                     
+[2] "glycolytic process"                                 
+[3] "ATP generation from ADP"                            
+[4] "purine nucleoside diphosphate metabolic process"    
+[5] "purine ribonucleoside diphosphate metabolic process"
+
+[[3]]
+[1] "chemical synaptic transmission"                   
+[2] "anterograde trans-synaptic signaling"             
+[3] "trans-synaptic signaling"                         
+[4] "synaptic signaling"                               
+[5] "regulation of neuromuscular synaptic transmission"
+
+[[4]]
+character(0)
+
+[[5]]
+[1] "compound eye photoreceptor cell differentiation"
+[2] "eye photoreceptor cell differentiation"         
+[3] "compound eye photoreceptor fate commitment"     
+[4] "eye photoreceptor cell fate commitment"         
+[5] "anesthesia-resistant memory"                    
+
+[[6]]
+[1] "ATP metabolic process"                         
+[2] "generation of precursor metabolites and energy"
+[3] "ATP biosynthetic process"                      
+[4] "purine ribonucleotide metabolic process"       
+[5] "ribose phosphate metabolic process"            
+
+[[7]]
+[1] "cytoplasmic translation"          "ribosome biogenesis"             
+[3] "ribosome assembly"                "ribosomal small subunit assembly"
+[5] "maturation of LSU-rRNA"          
+
+[[8]]
+[1] "chaperone-mediated protein folding" "protein folding"                   
+[3] "response to heat"                   "protein stabilization"             
+[5] "determination of adult lifespan"   
+
+[[9]]
+[1] "proton transmembrane transport"          "ATP metabolic process"                  
+[3] "cation transport"                        "purine ribonucleotide metabolic process"
+[5] "ribose phosphate metabolic process"     
+
+[[10]]
+[1] "chemical synaptic transmission"              
+[2] "anterograde trans-synaptic signaling"        
+[3] "trans-synaptic signaling"                    
+[4] "modulation of chemical synaptic transmission"
+[5] "regulation of trans-synaptic signaling"      
+
+[[11]]
+character(0)
+
+[[12]]
+[1] "cytoplasmic translation"                       
+[2] "ribosome biogenesis"                           
+[3] "ribosome assembly"                             
+[4] "ribonucleoprotein complex assembly"            
+[5] "ribonucleoprotein complex subunit organization"
+
+[[13]]
+[1] "regulation of secretion"                       
+[2] "anesthesia-resistant memory"                   
+[3] "signaling receptor ligand precursor processing"
+[4] "negative regulation of synaptic transmission"  
+[5] "secretion"                                     
+
+[[14]]
+[1] "ATP metabolic process"                                         
+[2] "oxidative phosphorylation"                                     
+[3] "ATP biosynthetic process"                                      
+[4] "purine ribonucleoside triphosphate metabolic process"          
+[5] "energy coupled proton transport, down electrochemical gradient"
+
+[[1]]
+[1] "regulation of membrane potential"                       
+[2] "negative regulation of translation"                     
+[3] "negative regulation of cellular amide metabolic process"
+[4] "cation transport"                                       
+[5] "ion transmembrane transport"                            
+
+[[2]]
+[1] "chemical synaptic transmission"              
+[2] "anterograde trans-synaptic signaling"        
+[3] "trans-synaptic signaling"                    
+[4] "regulation of membrane potential"            
+[5] "modulation of chemical synaptic transmission"
+
+[[3]]
+[1] "cytoplasmic translation"                       
+[2] "ribosome biogenesis"                           
+[3] "ribosome assembly"                             
+[4] "ribonucleoprotein complex assembly"            
+[5] "ribonucleoprotein complex subunit organization"
+
+[[4]]
+[1] "phototransduction, visible light" "detection of visible light"      
+[3] "detection of external stimulus"   "detection of abiotic stimulus"   
+[5] "response to light stimulus"      
+
+[[5]]
+[1] "protein refolding"                             
+[2] "response to heat"                              
+[3] "chaperone cofactor-dependent protein refolding"
+[4] "cellular response to unfolded protein"         
+[5] "response to unfolded protein"                  
+
+[[6]]
+[1] "regulation of membrane potential"     "chemical synaptic transmission"      
+[3] "anterograde trans-synaptic signaling" "trans-synaptic signaling"            
+[5] "cation transport"                    
+
+[[7]]
+[1] "chemical synaptic transmission"              
+[2] "anterograde trans-synaptic signaling"        
+[3] "trans-synaptic signaling"                    
+[4] "modulation of chemical synaptic transmission"
+[5] "regulation of trans-synaptic signaling"      
+

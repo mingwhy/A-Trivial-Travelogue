@@ -1,0 +1,135 @@
+start running: year2021 month12 day10 hour8 min32 sec3.899051e+01
+Step 1: loading 5 data sets......
+condition1.txt
+condition2.txt
+condition3.txt
+condition4.txt
+condition5.txt
+Step 1 Done: 0.004306 minutes
+Here are the optional input arguments for preprocessing the data:
+standardization method=0,correlation tag=0
+Step 2: Compute the HO GSVD decomposition......
+Step 2 Done: 0.003894 minutes
+The following 5 candidate vectors are selected:
+     1
+     2
+     3
+     4
+     5
+
+Step 3: Calling fdrtool to select the cluster nodes......
+**************************************************************
+Selecting cluster nodes by fdrtool for v1
+[1] "/Users/ming/Downloads/C3DmatR1"
+Step 1... determine cutoff point
+Step 2... estimate parameters of null distribution and eta0
+Step 3... compute p-values and estimate empirical PDF/CDF
+Step 4... compute q-values and local fdr
+
+cut 39 nodes for this cluster (MER=0.050000)
+**************************************************************
+Selecting cluster nodes by fdrtool for v2
+[1] "/Users/ming/Downloads/C3DmatR1"
+Step 1... determine cutoff point
+Step 2... estimate parameters of null distribution and eta0
+Step 3... compute p-values and estimate empirical PDF/CDF
+Step 4... compute q-values and local fdr
+
+cut 51 nodes for this cluster (MER=0.050000)
+**************************************************************
+Selecting cluster nodes by fdrtool for v3
+[1] "/Users/ming/Downloads/C3DmatR1"
+Step 1... determine cutoff point
+Step 2... estimate parameters of null distribution and eta0
+Step 3... compute p-values and estimate empirical PDF/CDF
+Step 4... compute q-values and local fdr
+
+cut 0 nodes for this cluster (MER=0.050000)
+An empty cluster or the cluster covers all nodes: no cluster/edge list generated, no validation
+**************************************************************
+Selecting cluster nodes by fdrtool for v4
+[1] "/Users/ming/Downloads/C3DmatR1"
+Step 1... determine cutoff point
+Step 2... estimate parameters of null distribution and eta0
+Step 3... compute p-values and estimate empirical PDF/CDF
+Step 4... compute q-values and local fdr
+
+cut 0 nodes for this cluster (MER=0.050000)
+An empty cluster or the cluster covers all nodes: no cluster/edge list generated, no validation
+**************************************************************
+Selecting cluster nodes by fdrtool for v5
+[1] "/Users/ming/Downloads/C3DmatR1"
+Step 1... determine cutoff point
+Step 2... estimate parameters of null distribution and eta0
+Step 3... compute p-values and estimate empirical PDF/CDF
+Step 4... compute q-values and local fdr
+
+cut 2 nodes for this cluster (MER=0.050000)
+Step 3 Done: 0.034595 minutes
+Step 4: Validating all the clusters detected above......
+Here are the arguments used for cluster validation:
+randomization times=100 to 1000, threshold=0.050000, individual cluster quality measure=2, overall cluster quality measure=5
+And use the absolute values from the data in cluster validation
+validating clusters selected from v1
+**************************************************************
+now validating the cluster (file) v1_bot39_c39nodes_q0.05.txt
+******************************************
+Validation sub-step 1--permuting each input data set individually...
+incremental permutation begins...
+Validation Step 1 Done
+Here are the output from Validation Step 1:
+Data set 1: the individual p-value is 0.000000 by randomizing the data 1000 times
+Data set 2: the individual p-value is 0.000000 by randomizing the data 1000 times
+Data set 3: the individual p-value is 0.000000 by randomizing the data 1000 times
+Data set 4: the individual p-value is 0.000000 by randomizing the data 1000 times
+Data set 5: the individual p-value is 0.000000 by randomizing the data 1000 times
+The cluster presents in data sets (G+):
+     1     2     3     4     5
+
+Validation Step 2---validating the significance of the cluster in data sets G+
+the original overall cluster quality is 0.021206
+incremental permutation begins......
+Validation Step 2 done ....
+the overall p-value is 0.000000 for cluster (node 462 to 500, 1000 permutations
+******************************************
+Validation for cluster (v1_bot39_c39nodes_q0.05.txt) is done: 0.049928 minutes
+validating clusters selected from v2
+**************************************************************
+now validating the cluster (file) v2_top1_c51nodes_q0.05.txt
+******************************************
+This cluster is too small(<3 nodes)--delete
+**************************************************************
+now validating the cluster (file) v2_bot50_c51nodes_q0.05.txt
+******************************************
+Validation sub-step 1--permuting each input data set individually...
+incremental permutation begins...
+Validation Step 1 Done
+Here are the output from Validation Step 1:
+Data set 1: the individual p-value is 0.780000 by randomizing the data 100 times
+Data set 2: the individual p-value is 0.000000 by randomizing the data 1000 times
+Data set 3: the individual p-value is 0.000000 by randomizing the data 1000 times
+Data set 4: the individual p-value is 1.000000 by randomizing the data 100 times
+Data set 5: the individual p-value is 0.000000 by randomizing the data 1000 times
+The cluster presents in data sets (G+):
+     2     3     5
+
+Validation Step 2---validating the significance of the cluster in data sets G+
+the original overall cluster quality is 6.782985
+incremental permutation begins......
+Validation Step 2 done ....
+the overall p-value is 0.000000 for cluster (node 451 to 500, 1000 permutations
+******************************************
+Validation for cluster (v2_bot50_c51nodes_q0.05.txt) is done: 0.120443 minutes
+validating clusters selected from v3
+validating clusters selected from v4
+validating clusters selected from v5
+**************************************************************
+now validating the cluster (file) v5_top1_c2nodes_q0.05.txt
+******************************************
+This cluster is too small(<3 nodes)--delete
+**************************************************************
+now validating the cluster (file) v5_bot1_c2nodes_q0.05.txt
+******************************************
+This cluster is too small(<3 nodes)--delete
+******************************************
+Step 4 Done: 0.121316 minutes

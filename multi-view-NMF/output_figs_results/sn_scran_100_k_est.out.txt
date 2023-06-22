@@ -1,0 +1,27 @@
+sex	cluster	ncell	k
+male	adult brain perineurial glial cell	733	10
+male	columnar neuron T1	751	3
+male	cone cell	2544	17
+male	ensheathing glial cell	840	8
+male	epithelial cell	1998	21
+male	gamma Kenyon cell	556	4
+male	lamina monopolar neuron L2	603	2
+male	olfactory receptor neuron	620	7
+male	outer photoreceptor cell	3000	6
+male	photoreceptor cell R8	733	7
+male	pigment cell	628	4
+male	skeletal muscle of head	683	11
+male	T neuron T4/T5a-b	614	3
+female	adult brain perineurial glial cell	856	11
+female	columnar neuron T1	831	3
+female	cone cell	2601	18
+female	ensheathing glial cell	953	7
+female	epithelial cell	2560	25
+female	gamma Kenyon cell	543	5
+female	lamina monopolar neuron L2	600	2
+female	olfactory receptor neuron	708	8
+female	outer photoreceptor cell	2828	6
+female	photoreceptor cell R8	700	7
+female	pigment cell	684	6
+female	skeletal muscle of head	823	12
+female	T neuron T4/T5a-b	773	5
