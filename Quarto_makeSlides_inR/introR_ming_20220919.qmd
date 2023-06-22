@@ -1,0 +1,1033 @@
+---
+title: "Introduction to R and RStudio"
+author: 
+  - "Ming Yang <br> 
+   Laboratory Medicine & Pathology, UW <br> 
+   mingy16@uw.edu <br> 
+   Sep 23, 2022 @IPHG"
+
+format:
+  revealjs:
+    theme: [ming_custom.scss]
+    # eval: false
+    echo: true
+    code-line-numbers: false
+    fig-align: center
+    slide-number: true
+    smooth-scroll: true
+    self-contained: true
+
+  # html:
+  #   # eval: false
+  #   echo: true
+  #   code-line-numbers: false
+  #   fig-align: center
+---
+
+# Outline
+- What is R
+- Why use R
+- Where and how to get help
+- Some basics
+- Used cases
+
+# What is R
+-  it's an app on your computer
+-  it's a computation tool
+-  it's a programming language
+-  it's a community
+
+## it's an app on your computer
+   which means you need to `download` and `install` it on your computer.
+
+- Install R
+   <br> R engine: [https://cran.rstudio.com/](https://cran.rstudio.com/)
+- Install RStudio
+    <br>User friendly interface: [https://www.rstudio.com/products/rstudio/download/](https://www.rstudio.com/products/rstudio/download/)
+    
+<center>![R and Rstudio icons](images/R_Rstudio.png){width="50%" height="8%"}</center>
+
+## Rstudio cloud
+- Or, do it on cloud...
+- Google `rstudio cloud` 
+- Log in via your UW email: [https://login.rstudio.cloud/](https://login.rstudio.cloud/)
+- Enjoy the journey~
+
+## it's a computation tool
+
+**R as a Calculator**
+
+```{r}
+#| results: hide
+#| fig.show: hide
+#| eval: false
+1 + 1 # Simple Arithmetic [1] 2
+2 + 3 * 4 # Operator precedence [1] 14
+3 ^ 2 # Exponentiation
+
+sqrt(10) # Basic mathematical functions are available
+log(10)
+
+pi # The constant pi is predefined
+# Circumference: 2*pi*r
+2*pi*6378 # Circumference of earth at equator (in km)
+
+exp(1) # the exponential growth constant
+exp(10)
+```
+
+##
+**R as a Smart Calculator**
+
+```{r}
+#| results: hide
+#| fig.show: hide
+#| eval: false
+# define variables
+x = 1  # using "=" or "<-" operator to set values
+y = 3
+z = 4 
+x+y+z
+x*y*z 
+
+X * Y * Z # Variable names are case sensitive
+
+This.Year = 2004 # Variable names can include period 
+This.Year
+
+1:10
+sum(1:10)
+prod(1:10)
+```
+
+## R to dig into data
+
+:::: {.columns}
+::: {.column width="35%"}
+- statistical analysis
+- data visualization
+- simulation
+
+[The R Graph Gallery](https://r-graph-gallery.com/)
+
+:::
+
+::: {.column width="65%"}
+![[The R Graph Gallery](https://r-graph-gallery.com/)](images/R_graph_gallery.png){width=120% height=40%}
+:::
+::::
+
+##  it's a programming language
+
+
+:::: {.columns}
+::: {.column width="40%"}
+which means you can invent your own wheel (a pipeline) and tell a story with R.
+
+<center>![](images/Black-box2.png){width=100% height=100%}</center>
+:::
+
+::: {.column width="60%"}
+<center>![](images/fly-eye-fig.png){width=100% height=100%}</center>
+
+A R Pipeline example from my research project. [Github link](https://github.com/mingwhy/AD_fly_eye) and a [demo](https://htmlpreview.github.io/?https://github.com/mingwhy/AD_fly_eye/blob/main/00_fly_eye_pat/Fly.eye.pat_step-by-step_tutorials/Fly.eye.pat_step-by-step_tutorial_1_image.html)
+:::
+::::
+
+
+
+##  it's a community
+<h4 color="white">People contribute and help each other.<br>Free online R resources.</h4>
+
+
+- R workshops
+- R tutorials
+- R packages
+
+
+## R package
+<h4 color="white">R packages are the flesh and bone of R. <br>Packages contain functions, which are just ***verbs***</h4>
+
+<ul style="color="white;font-size:6px">
+ <li>Data processing and cleaning</li>
+ <li>Data visualization</li>
+ <li>Interactive web-apps</li>
+ <li>Typesetting, writing articles and slides</li>
+ <li>The newest machine learning routines</li>
+</ul>
+
+## R packages
+- There are thousands of [them](https://cran.r-project.org/web/packages/available_packages_by_name.html#available-packages-Z)!
+- Some [popular R package](https://www.rstudio.com/products/rpackages/).<br>
+
+`ggplot2` is an enhanced data visualization package for R.
+<br>
+To use a package, you need `install` and `load` it.
+
+```{r}
+#| results: hide
+#| fig.show: hide
+#| eval: false
+# Install R packages:
+install.packages("ggplot2")
+
+# load the package to take full advantage of it
+library(ggplot2)
+```
+
+##
+How to use it?<br>
+Google: `ggplot2 usage` or `ggplot2 example`
+<br>
+R built-in dataset: `iris`
+
+<img src="images/iris_dataset.png" height="300" width="1000"/>
+
+What's the relationship between *Sepal.Length* and *Sepal.Width* in each of the three species?
+
+##
+
+```{r}
+data(iris)
+plot(iris$Sepal.Length,iris$Sepal.Width,col=iris$Species,pch=16)
+legend('topright',legend=c("setosa", "versicolor", "virginica" ),pch=16,col=c('black','green','red'))
+```
+
+##
+```{r}
+library(ggplot2)
+data(iris)
+ggplot(iris, aes(x = Sepal.Length, y = Sepal.Width))+
+  geom_point(aes(color = Species))+               
+  geom_smooth(aes(color = Species, fill = Species))+
+  facet_wrap(~Species, ncol = 3, nrow = 1)+
+  scale_color_manual(values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  scale_fill_manual(values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  theme_classic(base_size = 25)
+```
+
+<img src="images/iris_eg.png" height="200" width="600"/>
+
+
+## More fancy stuff
+- Animations (R gganimate)
+- HTML documents  (R Markdown )
+- presentations (like this one! powered by R [Quarto](https://quarto.org/))
+- Write a book in (R bookdown)
+   <br> try search `data analysis R bookdown`
+    
+```{r}
+#| results: hide
+#| eval: false
+#| echo: false
+# Get data:
+library(gapminder)
+# load packages:
+library(gganimate)
+library(gifski)
+# Make a ggplot, but add frame=year: one image per year
+myplot<-ggplot(subset(gapminder,continent=='Americas'), aes(gdpPercap, lifeExp, size = pop, colour = country)) +
+  geom_point(alpha = 0.7, show.legend = FALSE) +theme_classic()+
+  scale_colour_manual(values = country_colors) +
+  scale_size(range = c(2, 12)) +
+  scale_x_log10() +
+  facet_wrap(~continent) +
+  # Here comes the gganimate specific bits
+  labs(title = 'Year: {frame_time}', x = 'GDP per capita', y = 'life expectancy') +
+  transition_time(year) +
+  ease_aes('linear')
+
+# Save at gif:
+animate(myplot, duration = 5, fps = 20, width = 200, height = 200, renderer = gifski_renderer())
+anim_save("animation-scatterplots.gif")
+```
+
+<div class="image123">
+  <div class="imgContainer">
+  <img src="images/animation-datasaurus.gif" height="250" width="250"/>
+  </div>
+  <div class="imgContainer">
+  <img src="images/animation-scatterplots.gif" height="250" width="250"/>
+  </div>
+  <div class="imgContainer">
+  <img src="images/rmarkdown.png" height="250" width="250"/>
+  </div>
+  <div class="imgContainer">
+  <img src="images/rbookdown.png" height="250" width="250"/>
+  </div>
+</div>
+
+
+## The COVID19 package 
+
+[The COVID19 package, an interface to the COVID-19 Data Hub](https://rviews.rstudio.com/2021/12/08/the-r-package-covid19/)
+
+<img src="images/covid19-R-package.png" height="300" width="1000"/>
+
+
+# Why use R
+- Free and open-source (R and Rstudio)
+- Runs on a variety of platforms including Windows, Unix and MacOS
+- Extremely easy data manipulations
+- Basic and advanced visualizations
+- Easily extends to serve your specific needs
+- ***Friendly community (R packages and many contributors)***
+- ***Reproducible research***
+
+
+## Reproducible research
+
+Can I replicate results from publications?
+
+![Image [source](https://www.alautarescu.com/post/advanced-methods-in-reproducible-science-2020)](images/reproduce.research.png)
+
+## Reproducible research Aided by Rmarkdown
+
+Key ingredients: ***data, code, method***
+
+![Image [source](https://www.displayr.com/what-is-reproducible-research/)](images/reproduce.research2.png)
+
+## A minimal R Markdown document
+**RMarkdown**, a document that contains ***a title***, ***some texts*** and ***R code chunks*** to create reproducible reports.
+
+<img src="images/hello-rmd.png" height="500" width="700"/>
+
+```{r, animation.hook='gifski'}
+#| echo: false
+for (i in 1:2) {
+  pie(c(i %% 2, 6), col = c('red', 'yellow'), labels = NA)
+}
+```
+
+[Example code source](https://slides.yihui.org/2020-covid-rmarkdown.html#15)
+
+## Learning Curve
+
+R makes easy things hard, and hard things easy.
+
+:::: {.columns}
+
+::: {.column width="60%"}
+![Image [source](https://techvidvan.com/tutorials/pros-and-cons-of-r/)](images/learning-curves-of-R.png)
+
+:::
+
+::: {.column width="40%"}
+There are tons of online tutorials on R, none alone are comprehensive.
+<br>
+
+Many more advanced functionality of R from user contributed R packages. 
+<br>
+
+Hunting for what you want can be time consuming.
+<br>
+
+***Learning by doing and don't hesitate to ask !***
+
+:::
+
+::::
+
+
+## Where and how to get help?
+
+- RStudio help interface `?sum`
+- Ask people around
+- `Google`: copy and paste error message 
+- `Stackoverflow`: keywords matter
+
+# Some basics
+
+- data types and structure
+- utility functions
+- write a program
+- define functions
+
+## types of varibles
+
+**Element**: Numeric and character objects.
+```{r}
+x = 2 # store an object 
+x # print this object
+class(x)
+
+x = "Hello" # store a string object x
+class(x)
+```
+
+**Vector**: a set of elements, created via `c()`, `rep()`, `seq()`.
+```{r}
+c(1,2,5,6) #concatenate
+rep(1,10)  #replicate
+seq(2,6)   #sequence
+
+c('hello','hi','nice day')
+rep('hello',10)
+```
+
+##
+```{r}
+## make vectors into variables
+x = c(2, 1, -1, 2)
+y = c(0.1, 0.4, 0.2, 5)
+x*4
+y^2
+
+## Accessing elements in a vector
+x[1] #select one element
+x[c(1,3)] #select two elements
+
+## get rid of the first element
+x[-1]
+# variable manipulation
+x+y
+```
+
+## describe the vector
+```{r}
+Height = c(168, 177, 177, 177, 178, 172, 165, 171, 178, 170)
+
+length(Height)
+mean(Height)
+var(Height)
+median(Height)
+sort(Height)
+```
+
+## Data structures built from vectors
+
+<center>![image [source](https://mgimond.github.io/ES218/Week02a.html)](images/data_structures.png){width="300%"}</center>
+
+
+## Data frame
+
+**Data frame**: a group of named vectors.
+
+
+```{r}
+#| fig.show: hide
+# load the dataset
+data(iris) 
+
+# have a look at the dataset
+head(iris)
+
+# dimensions of a data frame
+dim(iris)
+
+# column names
+colnames(iris)
+```
+
+##
+```{r}
+# access one column vector in the data.frame
+iris$Sepal.Length
+
+#summary 
+summary(iris)
+```
+
+
+## Functions
+
+Action: Sum of 3 and 4 <br>
+Function: `sum(3,4)` <br>
+`sum()` is the `function`<br>
+`3,4` are the `arguments`
+
+##
+Frequently used functions are already implemented in R.
+
+Try search `R reference card`.
+
+```{r}
+#| fig.show: hide
+#| eval: false
+# data creation
+x=c(9,1,6)
+y=rep(2,3)
+
+# describe variables
+mean(x)
+var(x)
+
+# plot one variable
+hist(x)
+boxplot(x)
+# plot two variables
+plot(x,y)
+
+# math
+sin(x)
+cor(x,y)
+
+# dates and times
+date()
+Sys.time()
+```
+
+## programming
+
+Programming is basically flow control via statements in code
+
+- sequence
+- selection: if ... else
+- loop: for
+
+<center>![[image source](https://edu.gcfglobal.org/en/computer-science/sequences-selections-and-loops/1/)](images/program_structure.jpeg){width="60%"}</center>
+
+
+```{r}
+#| results: hide
+#| fig.show: hide
+#| eval: false
+# if ... else ...
+if (condition) {
+  # code executed when condition is TRUE
+} else {
+  # code executed when condition is FALSE
+}
+
+# for ...
+for(i in 1:x){ 
+  code 
+}
+
+# break and next statements
+if (test_expression) {
+  break
+}
+```
+
+
+## 
+```{r}
+#| results: hide
+#| fig.show: hide
+#| eval: false
+# selection: if (condition){} else {}
+#condition: true or false
+3 == 2
+3 == 3
+
+# check if the input number is odd or even.
+num = 10
+num %% 2
+num = 11
+num %% 2
+print(paste('Your input number is',num))
+if((num %% 2) == 0){
+  print(paste(num,"is Even"))
+} else {
+  print(paste(num,"is Odd"))
+}
+
+# loop: for
+for(r in 1:10){
+  area = pi*r^2 
+  print(paste('area of a cirle with radius',r,'is',area))
+}
+
+# combine the above two
+numbers=c(3,5,6,10,11)
+for(num in numbers){
+  if((num %% 2) == 0){
+    print(paste(num,"is Even"))
+  } else {
+    print(paste(num,"is Odd"))
+  }
+}
+```
+
+## User-defined Functions
+
+Functions make your life easier: avoid copy and paste
+
+```{r}
+#| results: hide
+#| fig.show: hide
+#| eval: false
+function.name <- function(argument1, argument2){
+    # do something here
+    return()
+}
+```
+
+```{r}
+#| results: hide
+#| fig.show: hide
+#| eval: false
+# sequence: a series of actions
+# what's the area of a square
+get_area<-function(long,side){
+  return(long*wide)
+}
+get_area(10,20)
+```
+
+##
+
+```{r}
+# selection: if ... else
+# check if the input number is odd or even.
+tell.me.odd.or.even<-function(num){
+  print(paste('Your input number is',num))
+  if((num %% 2) == 0){
+    print(paste(num,"is Even"))
+  } else {
+    print(paste(num,"is Odd"))
+  }
+}
+tell.me.odd.or.even(10)
+tell.me.odd.or.even(201)
+
+tell.me.odd.or.even(5.5) #??
+```
+
+##
+
+```{r}
+5%%1
+5.5%%1
+tell.me.odd.or.even2<-function(num){
+  print(paste('Your input number is',num))
+  if(num%%1==0){
+    if((num %% 2) == 0){
+      print(paste(num,"is Even"))
+    } else {
+      print(paste(num,"is Odd"))
+    }
+  }else{
+    print('Your input number is not an integer!')
+  }
+}
+tell.me.odd.or.even2(5)
+tell.me.odd.or.even2(5.5)
+```
+
+# Used cases
+
+<h2 color="white">Let's play some "real" datasets!</h2>
+
+## R built-in datasets
+Take fulll advantage of [R built-in datasets](http://www.sthda.com/english/wiki/r-built-in-data-sets).
+
+```{r}
+#| eval: false
+data()
+data(iris)
+?iris
+```
+
+## `iris` dataset in R
+
+The `iris` dataset is a built-in dataset in R that contains measurements on 4 different features (in centimeters) for 50 flowers from 3 different species.
+
+```{r}
+#| results: hide
+#| fig.show: hide
+#| eval: false
+# load the dataset
+data(iris) 
+
+# have a look at the dataset
+head(iris)
+class(iris)
+
+# summarize iris dataset
+summary(iris)
+
+# display rows and columns
+dim(iris)
+
+# visualize the dataset
+# create histogram of values for sepal length
+hist(iris$Sepal.Length,
+     col='steelblue',
+     main='Histogram',
+     xlab='Length',
+     ylab='Frequency')
+
+# create scatterplot of sepal width vs. sepal length
+plot(iris$Sepal.Width, iris$Sepal.Length,
+     col='steelblue',
+     main='Scatterplot',
+     xlab='Sepal Width',
+     ylab='Sepal Length',
+     pch=19)
+
+#boxplot of sepal length
+boxplot(Sepal.Length~Species,
+        data=iris,
+        main='Sepal Length by Species',
+        xlab='Species',
+        ylab='Sepal Length',
+        col='steelblue',
+        border='black')
+#The relationship between two numerical variables
+plot(iris$Petal.Width,iris$Petal.Length,col=iris$Species)
+legend("topleft", levels(iris$Species), fill = 1:3) # add legends on topleft.
+
+#pairwise relationship among all columns
+pairs(iris[,1:4],col=iris[,5],oma=c(4,4,6,12))
+par(xpd=TRUE)
+legend(0.85,0.6, as.vector(unique(iris$Species)),fill=c(1,2,3))
+```
+
+##
+
+```{r}
+#| results: hide
+#| fig-align: center
+library(ggpubr)
+
+# create the density distribution for each of the four features
+# Density plot with mean lines and marginal rug
+ggdensity(iris, x = "Sepal.Length",
+   add = "mean", rug = TRUE,             # Add mean line and marginal rugs
+   color = "Species", fill = "Species",  # Color by groups
+   palette = "jco")                      # use jco journal color palette
+```
+
+## 
+
+```{r}
+#| results: hide
+#| fig-align: center
+library(ggpubr)
+
+# create the density distribution of “Sepal.Length”, colored by groups (“Species”)
+# Density plot with mean lines and marginal rug
+plots=lapply(colnames(iris)[1:4],function(feature){
+  ggdensity(iris, x = feature,
+   add = "mean", rug = TRUE,             # Add mean line and marginal rugs
+   color = "Species", fill = "Species",  # Color by groups
+   palette = "jco")                      # use jco journal color palette
+})
+gridExtra::grid.arrange(grobs=plots,ncol=2)
+```
+
+##
+```{r}
+#| fig-align: center
+#| fig-height: 6
+#| fig-width: 10
+# Create a box plot with p-values comparing groups:
+# Groups that we want to compare
+my_comparisons <- list(
+  c("setosa", "versicolor"), c("versicolor", "virginica"),
+  c("setosa", "virginica")
+)
+# Create the box plot. Change colors by groups: Species
+# Add jitter points and change the shape by groups
+ggboxplot(
+  iris, x = "Species", y = "Sepal.Length",
+  color = "Species", palette = c("#00AFBB", "#E7B800", "#FC4E07"),
+  add = "jitter"
+  )+theme_classic(base_size = 25)+
+  stat_compare_means(comparisons = my_comparisons, method = "t.test")
+```
+
+
+## `mtcars` dataset in R
+
+The mtcars dataset is a built-in dataset in R that contains measurements on 11 different features for 32 different cars.
+
+```{r}
+#| results: hide
+#| fig.show: hide
+#| eval: false
+# load the dataset
+data(mtcars) 
+
+# have a look at the dataset
+head(mtcars)
+
+# summarize iris dataset
+summary(mtcars)
+
+# display rows and columns
+dim(mtcars)
+
+# visualize the dataset
+#create histogram of values for mpg
+hist(mtcars$mpg,
+     col='steelblue',
+     main='Histogram',
+     xlab='mpg',
+     ylab='Frequency')
+
+#create boxplot of values for mpg
+boxplot(mtcars$mpg,
+        main='Distribution of mpg values',
+        ylab='mpg',
+        col='steelblue',
+        border='black')
+
+#create scatterplot of mpg vs. wt
+plot(mtcars$mpg, mtcars$wt,
+     col='steelblue',
+     main='Scatterplot',
+     xlab='mpg',
+     ylab='wt',
+     pch=19)
+
+
+```
+
+# Simulation 
+
+## The birthday problem
+
+*A room has n people, and each has an equal chance of being born on any of the 365 days of the year. (For simplicity, we’ll ignore leap years). What is the probability that two people in the room have the same birthday?*
+
+
+<center>![Image borrowed [online](https://www.youtube.com/watch?v=QrwV6fJKBi8&ab_channel=RichardB1983)](images/birthday.paradox.from.youtube.jpeg){width="60%"}</center>
+
+## Some prep
+
+```{r}
+#| results: hide
+#| fig.show: hide
+#| eval: false
+# if we have 10 people in the room
+# 10 random numbers from 1 to 365
+sample(1:365, 10, replace = TRUE)
+
+# When the values 2 and 1 appear for the second time, they're TRUE
+duplicated(c(1, 2, 3, 4, 5))
+duplicated(c(1, 2, 3, 1, 2))
+
+# This asks "are any values here duplicated?"
+any(duplicated(c(1, 2, 3, 4, 5)))
+any(duplicated(c(1, 2, 3, 1, 2)))
+```
+
+
+## Let's do one trail!
+
+```{r}
+#| results: hide
+#| fig.show: hide
+#| eval: false
+# if we have 10 people in the room
+# 10 random numbers from 1 to 365
+birthdays=sample(365, 10, replace = TRUE)
+birthdays
+
+# This asks "are any values here duplicated?"
+any(duplicated(birthdays))
+
+```
+
+
+## From one trial to many many trials
+Let's write a `loop`. 
+
+```{r}
+#| results: hide
+#| fig.show: hide
+#| eval: false
+# Basic structure:
+for(i in 1:10){
+    #*do something here*<br>
+}
+```
+
+```{r}
+#| results: hide
+#| fig.show: hide
+#| eval: false
+for(i in 1:100){
+  # if we have 10 people in the room
+  # 10 random numbers from 1 to 365
+  birthdays=sample(1:365, 10, replace = TRUE)
+ 
+  # This asks "are any values here duplicated?"
+  any(duplicated(birthdays))
+}
+
+```
+
+## Keep result from each loop 
+
+```{r}
+#| results: hide
+#| fig.show: hide
+#| eval: false
+simu.out=c()
+for(i in 1:100){
+  # if we have 10 people in the room
+  # 10 random numbers from 1 to 365
+  birthdays=sample(1:365, 10, replace = TRUE)
+ 
+  # This asks "are any values here duplicated?"
+  simu.out[i]=any(duplicated(birthdays))
+}
+
+simu.out
+
+sum(simu.out)/length(simu.out)
+```
+
+
+## when n = 5, 6, 7...
+
+```{r}
+#| results: hide
+#| fig.show: hide
+#| eval: false
+n = 5
+simu.out=c()
+for(i in 1:100){
+   # if we have 10 people in the room
+  # 10 random numbers from 1 to 365
+  birthdays=sample(1:365, n, replace = TRUE)
+ 
+  # This asks "are any values here duplicated?"
+  simu.out[i]=any(duplicated(birthdays))
+}
+simu.out
+
+sum(simu.out)/length(simu.out)
+```
+
+## Survey a range of n values
+
+
+```{r}
+#| results: hide
+#| fig.show: hide
+#| eval: false
+n.people = 1:50 
+simu.out=data.frame( 'n.people' = n.people, 'freq'=0)
+for( n in n.people){
+  out=c();
+  for(i in 1:1000){
+     # if we have 10 people in the room
+    # 10 random numbers from 1 to 365
+    birthdays=sample(1:365, n, replace = TRUE)
+   
+    # This asks "are any values here duplicated?"
+    out[i]=any(duplicated(birthdays))
+  }
+  simu.out[n,2]=sum(out)/length(out)
+}
+
+# plot the result
+plot(simu.out$n.people,simu.out$freq,main="Probability(two people have the same birthday)",xlab='# of people',ylab='',cex.lab=2)
+abline(h=0.5,col='darkred') #add a horizontal y=0.5 line
+
+simu.out[simu.out$freq>0.5,] #the number of people to 'guarantee' >50% chance of having two people share the same birthday
+```
+
+
+
+## Survey a range of n values: result
+
+:::: {.columns}
+
+::: {.column width="60%"}
+```{r}
+#| echo: false
+#| fig-align: center
+#| fig-height: 10
+n.people = 1:50 
+simu.out=data.frame( 'n.people' = n.people, 'freq'=0)
+for( n in n.people){
+  out=c();
+  for(i in 1:1000){
+     # if we have 10 people in the room
+    # 10 random numbers from 1 to 365
+    birthdays=sample(1:365, n, replace = TRUE)
+   
+    # This asks "are any values here duplicated?"
+    out[i]=any(duplicated(birthdays))
+  }
+  simu.out[n,2]=sum(out)/length(out)
+}
+
+# plot the result
+plot(simu.out$n.people,simu.out$freq,main="Probability(two people have the same birthday)",xlab='# of people',ylab='',cex.lab=3,cex=2,cex.main=2)
+abline(h=0.5,col='darkred') #add a horizontal y=0.5 line
+
+```
+:::
+
+
+::: {.column width="40%"}
+```{r}
+#| echo: false
+simu.out 
+```
+:::
+
+::::
+
+## Mathematically
+*In probability theory, the birthday problem asks for the probability that, in a set of n randomly chosen people, at least two will share a birthday. The birthday paradox is that, counterintuitively, the probability of a shared birthday exceeds 50% in a group of only 23 people. [from wiki](https://en.wikipedia.org/wiki/Birthday_problem)*
+
+$p(n) = \frac{365!}{365^n {(365-n)!}}= n! * \binom{365}{n}/365^n$
+
+```{r}
+#| results: hide
+#| fig.show: hide
+#| eval: false
+give.me.birthday.solution <- function(n) {
+  return(p <- 1 - factorial(n) * choose(365, n) / 365^n)
+}
+
+give.me.birthday.solution(22) 
+give.me.birthday.solution(23) 
+```
+
+## How good is our simultion?
+
+```{r}
+#| results: hide
+#| eval: false
+math.out=c();
+for(n in n.people){
+  math.out[n]=give.me.birthday.solution(n) 
+}
+# plot the result
+par(mfrow=c(1,3))
+
+plot(simu.out$n.people,simu.out$freq,main="Probability(two people have the same birthday)",xlab='# of people',ylab='')
+
+plot(n.people,math.out,col='blue',type="b")
+
+plot(simu.out$n.people,simu.out$freq,xlab='# of people',ylab='')
+points(n.people,math.out,col='blue',type="l")
+legend( 'topleft',legend=c('simulation','analytical'), lty=1,col=c("black", "blue"))
+
+```
+
+## How good is our simultion: result
+
+```{r}
+#| results: hide
+#| echo: false
+give.me.birthday.solution <- function(n) {
+  return(p <- 1 - choose(365, 365 - n) * factorial(n) / 365 ^ n)
+}
+math.out=c();
+for(n in n.people){
+  math.out[n]=give.me.birthday.solution(n) 
+}
+# plot the result
+par(mfrow=c(1,3))
+
+plot(simu.out$n.people,simu.out$freq,main="Probability(two people have the same birthday)",xlab='# of people',ylab='')
+
+plot(n.people,math.out,col='blue',type="b")
+
+plot(simu.out$n.people,simu.out$freq,xlab='# of people',ylab='')
+points(n.people,math.out,col='blue',type="l")
+legend( 'topleft',legend=c('simulation','analytical'), lty=1,col=c("black", "blue"))
+
+```
+
+# Questions?
+mingy16@uw.edu

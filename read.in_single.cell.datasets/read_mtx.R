@@ -1,0 +1,126 @@
+
+library(Matrix)
+library(Seurat)
+library(ggplot2)
+library(patchwork)
+library(dplyr)
+library(Matrix)
+options(future.globals.maxSize = 3.2 * 1024^3)
+
+## a used case: process data downloaded from GSE158055
+## count matrix
+# check which column contain gene feature names
+#$gzip -cd /Users/mingyang/Documents/Data_human/blood/GSE158055_covid19_features.tsv.gz | less
+# check which column contain cell barcode names
+#$gzip -cd /Users/mingyang/Documents/Data_human/blood/GSE158055_covid19_barcodes.tsv.gz | less
+df.expr=Seurat::ReadMtx(mtx="GSE158055_covid19_counts.mtx.gz",
+                        features='GSE158055_covid19_features.tsv.gz',feature.column = 1,
+                        cells='GSE158055_covid19_barcodes.tsv.gz',cell.column=1)
+
+df.expr=readMM("GSE158055_covid19_counts.mtx.gz")
+#############################################################################
+## raw expr.mat:https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE134722
+df.expr=readMM("GSE134722_larvabrain/GSE134722_FirstInstarLarvalBrainNormalCondition_aggr_10X_matrix.mtx.gz")
+dim(df.expr); #17493  3751
+class(df.expr)
+df.expr[1:3,1:2]
+
+barcode=read.table("GSE134722_larvabrain/GSE134722_FirstInstarLarvalBrainNormalCondition_aggr_10X_barcodes.tsv.gz")
+dim(barcode) #3751
+head(barcode)
+
+df.gene=read.table("GSE134722_larvabrain/GSE134722_FirstInstarLarvalBrainNormalCondition_aggr_10X_genes.tsv.gz",as.is=T);
+head(df.gene)
+dim(df.gene) #17493  genes
+colnames(df.gene)=c("flybase",'symbol')
+
+rownames(df.expr)<-df.gene$symbol
+colnames(df.expr)<-barcode[,1]
+
+larva_brain<- CreateSeuratObject(counts = df.expr,project = "larvabrain")
+larva_brain
+
+dim(df.expr) #17493  3751
+larva_brain #17493 features across 3751 samples within 1 assay 
+saveRDS(larva_brain,'larvabrain_raw.rds')
+
+#############################################################################
+## further data quality control
+library(Seurat)
+library(ggplot2)
+
+raw.seurat<-readRDS("larvabrain_raw.rds")
+raw.seurat #17493 features across 3751 samples within 1 assay 
+
+head(raw@meta.data)
+raw=raw.seurat@assays$RNA@counts
+
+## filter condition
+nGeneLowCutOff <- 200; nGeneHighCutOff <- Inf
+nUMILowCutOff <- 400; nUMIHighCutOff <- Inf
+MitoLowCutOff <- -Inf; MitoHighCutOff <- 0.30
+min.cell <- 4; # keep gene expresses at >=4 cells
+
+## filter step: 
+# 1) calculate mito% for each cell, remove cell whose mito.perc > 0.3
+# 2) remove mito genes
+# 3) filter cell: gene (<200), umi (<400)
+# 4) filter gene:  discard genes which express <4 cells
+
+# 1) calculate mito% for each cell, remove cell whose mito.perc > 0.3
+(mito.genes <- grep(pattern = "^mt:",ignore.case = T,x = rownames(raw), value = TRUE))
+# 37 mito gene
+prop.mito <- Matrix::colSums(raw[mito.genes, ]) / Matrix::colSums(raw)
+summary(prop.mito)
+#Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+#0.0006807 0.0286801 0.0485810 0.0708849 0.0784645 0.9513784 
+
+i=prop.mito>MitoHighCutOff
+cat(sum(i),'cells fail MitoHighCutOff\n');
+if(sum(i)!=0){
+  raw=raw[,!i];
+}
+
+# 2) remove mito gene
+sum(rownames(raw) %in% mito.genes) #37 mito gene
+cat(sum(rownames(raw) %in% mito.genes) ,'mito genes removed\n')
+
+raw<-raw[!rownames(raw) %in% mito.genes,]
+dim(raw) #17456  3653
+
+
+# 3) filter cell: gene(<200), umi(<400)
+x=Matrix::colSums(raw>0)
+sum(x<nGeneLowCutOff) #0, all cells express at least 200 genes 
+i=sum(x<nGeneLowCutOff) 
+cat(sum(i),'cells fail nGeneLowCutOff\n');
+
+if(sum(i) !=0 ){raw=raw[,!i]}
+
+x=Matrix::colSums(raw)
+sum(x<nUMILowCutOff) #0 cells, total UMI<400
+i=x<nUMILowCutOff
+cat(sum(i),'cells fail nUMILowCutOff\n');
+
+if(sum(i) !=0){raw=raw[,!i]}
+
+# 4) filter gene:  discard genes which express <4 cells
+x<-Matrix::rowSums(raw>0)
+sum(x==0) #5262 gene
+sum(x<min.cell) #7124 genes, express in less than 4 cells
+i=x<min.cell
+
+cat(sum(i),'genes fail nUMILowCutOff\n');
+
+if(sum(i)!=0){
+  raw<-raw[!rownames(raw) %in% names(which(x<min.cell)),]
+  dim(raw) #10332  3653
+}
+
+whole<- CreateSeuratObject(counts = raw,
+                           min.cells=0, min.features = 0, project = "whole")
+whole #10332 features across 3653 samples within 1 assay 
+head(rownames(whole))
+head(colnames(whole))
+
+saveRDS(whole,'larvabrain_filtered.rds')

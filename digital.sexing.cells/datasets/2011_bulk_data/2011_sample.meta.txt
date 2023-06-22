@@ -1,0 +1,25 @@
+sample.info,GSM.id,sample.id
+cycle 10 male,GSM618403,M10
+cycle 11 male,GSM618404,M11
+cycle 12 male,GSM618405,M12
+cycle 13 male,GSM618406,M13
+cycle 14A male,GSM618407,M14A
+cycle 14A male replicate 2,GSM618408,M14A_r2
+cycle 14B male,GSM618409,M14B
+cycle 14B male replicate 2,GSM618410,M14B_r2
+cycle 14C male,GSM618411,M14C
+cycle 14C male replicate 2,GSM618412,M14C_r2
+cycle 14D male,GSM618413,M14D
+cycle 14D male replicate 2,GSM618414,M14D_r2
+cycle 10 female,GSM618415,F10
+cycle 11 female,GSM618416,F11
+cycle 12 female,GSM618417,F12
+cycle 13 unclear sex,GSM618418,U13
+cycle 14A female,GSM618419,F14A
+cycle 14A unclear sex,GSM618420,U14A
+cycle 14B female,GSM618421,F14B
+cycle 14B female replicate 2,GSM618422,F14B_r2
+cycle 14C female,GSM618423,F14C
+cycle 14C female replicate 2,GSM618424,F14C_r2
+cycle 14D female,GSM618425,F14D
+cycle 14D unclear sex,GSM618426,U14D

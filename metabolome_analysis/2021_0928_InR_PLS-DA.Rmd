@@ -1,0 +1,214 @@
+---
+title: "InR PLS-DA analysis"
+author: "Ming Yang"
+output:
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_depth: 2
+    #theme: united
+date: 'Compiled: `r format(Sys.Date(), "%B %d, %Y")`'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message=F,warning = F,cache=T)
+```
+
+In this R markdown file, I used a supervised method, Partial Least-Squares Discriminant Analysis (PLS-DA) implemented in the R package `mixOmics`, to perform sample classification, and then extracted metabolite features that are most informative of such classification.
+
+# Dataset overview
+
+Data dimension: 170 metabolites X 70 samples
+
+**60 samples in total**
+
+- 5 genotypes: wt, wt/353, 74/211, 211/19, 19/74
+- 2 ages: 15d, 30d 
+- 3 batches: 1, 2, 3
+
+2 replicates per genotype per age per batch
+
+
+**The 5 genotypes can be grouped by insulin resistance**
+
+- insulin sensitive: wt, wt/353
+- insulin resistant: 19/74, 74/211, 211/19
+ 
+**The 5 genotypes can be grouped by fecundity**
+
+- normal fecundity: wt, 74/211, 211/19
+- high fecundity: wt/353
+- low fecundity: 19/74 
+
+```{r}
+#BiocManager::install("mixOmics")
+library(mixOmics)
+
+# read in phenotype data
+dat=readRDS('./mz.filter.dat.rds')
+df.mat=dat$edata;
+pheno=dat$pheno
+
+# read in batch corrected data after `combat` function correction
+df.res=readRDS('mz.filter.combat.rds')
+#dim(df.res) #170 mz x 60 sample
+
+# X: nsample x nfeature
+X=t(df.res)
+# Y: class
+#insulin sensitive: wt, wt/353
+#insulin resistant: 19/74, 74/211, 211/19
+pheno$insulin=rep('resistant',nrow(pheno))
+pheno[pheno$genotype %in% c('wt','wt/353'),]$insulin='sensitive'
+
+#'normal' fecundity: wt, 74/211, 211/19
+#high fecundity: wt/353
+#low fecundity: 19/74 
+pheno$fecundity=rep('normal',nrow(pheno))
+pheno[pheno$genotype=='wt/353',]$fecundity='high'
+pheno[pheno$genotype=='19/74',]$fecundity='low'
+
+table(pheno$genotype,pheno$insulin)
+table(pheno$genotype,pheno$fecundity)
+```
+
+# Use PLS-DA to predict sample 'insulin resistance' label
+
+Main steps:
+
+- select #component: run 4-fold CV(cross validation) to select the optimal number of components
+- select #metablite.feature: for each component, run 4-fold CV to select the optimal number of metabolite features
+- extract those informative metabolite features
+
+```{r}
+## tune the model for insulin, two groups
+Y=pheno$insulin
+MyResult.plsda2 <- plsda(X,Y, ncomp=4)
+
+# select ncomp
+set.seed(30) # for reproducbility in this vignette, otherwise increase nrepeat
+MyPerf.plsda <- perf(MyResult.plsda2,validation="Mfold", folds=4, 
+                     progressBar=FALSE, nrepeat=20) # we suggest nrepeat = 50
+plot(MyPerf.plsda, col = color.mixo(5:7), sd = TRUE, legend.position = "horizontal")
+#MyPerf.plsda
+```
+
+The CER (classification error rate) is 0 with only one component, the data is super informative about insulin resistance status. I choose #component k = 2 to select #feature for each component.
+
+```{r}
+# for eacn comp, select n.feature
+list.keepX <- c(5:10,  seq(20, 100, 10))
+#list.keepX # to output the grid of values tested
+set.seed(30) # for reproducbility in this vignette, otherwise increase nrepeat
+tune.splsda.srbct <- tune.splsda(X, Y, ncomp = 2, 
+                                 validation = 'Mfold',
+                                 folds = 4, dist = 'max.dist', progressBar = FALSE,
+                                 measure = "BER", test.keepX = list.keepX,
+                                 nrepeat = 20)  
+error <- tune.splsda.srbct$error.rate
+#ncomp <- tune.splsda.srbct$choice.ncomp$ncomp # optimal number of components based on t-tests on the error rate
+#ncomp
+# 1
+ncomp=2;
+select.keepX <- tune.splsda.srbct$choice.keepX[1:ncomp]  # optimal number of variables to select
+select.keepX
+#plot(tune.splsda.srbct, col = color.jet(ncomp))
+```
+
+The best fitted model has #component k = 2, and #feature = 5 for each component, extract these metabolite features.
+
+```{r}
+#Based on those tuning results, run our final and tuned sPLS-DA model:
+MyResult.splsda.final <- splsda(X, Y, ncomp = 2, keepX = select.keepX)
+plotIndiv(MyResult.splsda.final, ind.names = FALSE, legend=TRUE,
+          ellipse = TRUE, title="sPLS-DA - final result")
+```
+
+Visualize the metabolite feature contribution (loading) for component 1.
+
+The height of each metabolite bar shows the contribution (loading).
+
+The color of each metabolite bar shows the sample label  for which the mean metabolite abundance is the maximum.
+
+
+```{r}
+#selectVar(MyResult.splsda.final,comp=1)$value
+plotLoadings(MyResult.splsda.final,comp=1,contrib='max',method='mean')
+```
+
+# Use PLS-DA to predict sample 'fecundity' label
+
+Main steps:
+
+- select #component: run 4-fold CV(cross validation) to select the optimal number of components
+- select #metablite.feature: for each component, run 4-fold CV to select the optimal number of metabolite features
+- extract those informative metabolite features
+
+```{r}
+## tune the model for fecundity
+Y=pheno$fecundity
+MyResult.plsda2 <- plsda(X,Y, ncomp=10)
+
+# select ncomp
+set.seed(30) # for reproducbility in this vignette, otherwise increase nrepeat
+MyPerf.plsda <- perf(MyResult.plsda2, validation = "Mfold", folds = 4, 
+                     progressBar = FALSE, nrepeat = 20) 
+
+plot(MyPerf.plsda, col = color.mixo(5:7), sd = TRUE, legend.position = "horizontal")
+#MyPerf.plsda
+```
+
+The CER (classification error rate) is close 0 with 3 components. I choose #component k = 3 to select #feature for each component.
+
+```{r}
+# for eacn comp, select n.feature
+list.keepX <- c(5:10,  seq(20, 100, 10))
+#list.keepX # to output the grid of values tested
+set.seed(30) # for reproducbility in this vignette, otherwise increase nrepeat
+ncomp=3;
+tune.splsda.srbct <- tune.splsda(X, Y, ncomp = ncomp,
+                                 validation = 'Mfold',
+                                 folds = 4, dist = 'max.dist', progressBar = FALSE,
+                                 measure = "BER", test.keepX = list.keepX,
+                                 nrepeat = 20)   
+error <- tune.splsda.srbct$error.rate
+#ncomp <- tune.splsda.srbct$choice.ncomp$ncomp # optimal number of components based on t-tests on the error rate
+#ncomp
+
+select.keepX <- tune.splsda.srbct$choice.keepX[1:ncomp]  # optimal number of variables to select
+select.keepX
+
+plot(tune.splsda.srbct, col = color.jet(ncomp))
+```
+
+The best fitted model has #component k = 3, and #feature = 20, 30, 100 for component 1,2,3, respectively. 
+
+Extract these metabolite features.
+
+```{r}
+#Based on those tuning results, we can run our final and tuned sPLS-DA model:
+MyResult.splsda.final <- splsda(X, Y, ncomp = 3, keepX = select.keepX)
+
+plotIndiv(MyResult.splsda.final, ind.names = FALSE, legend=TRUE, ellipse = TRUE, title="sPLS-DA, fecundity, comp1 VS 2")
+plotIndiv(MyResult.splsda.final,comp=c(1,3), ind.names = FALSE, legend=TRUE, ellipse = TRUE, title="sPLS-DA, fecundity, comp1 VS 3")
+plotIndiv(MyResult.splsda.final,comp=c(2,3), ind.names = FALSE, legend=TRUE, ellipse = TRUE, title="sPLS-DA, fecundity, comp2 VS 3")
+```
+
+Based on the plots, component 1 is already very informative about sample classification. 
+
+Below are the selected metabolite features for component 1 and 2.
+
+```{r fig.width=12,fig.height=12}
+plotLoadings(MyResult.splsda.final,comp=1,contrib='max',method='mean')
+plotLoadings(MyResult.splsda.final,comp=2,contrib='max',method='mean')
+#plotLoadings(MyResult.splsda.final,comp=3,contrib='max',method='mean')
+
+selectVar(MyResult.splsda.final,comp=1)$value
+selectVar(MyResult.splsda.final,comp=2)$value
+#selectVar(MyResult.splsda.final,comp=3)$value
+```
+
+```{r}
+installed.packages()[names(sessionInfo()$otherPkgs), "Version"]
+```
+

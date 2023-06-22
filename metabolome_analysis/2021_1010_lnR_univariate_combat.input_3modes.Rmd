@@ -1,0 +1,338 @@
+---
+title: "lnR_metabolomics: univariate analysis"
+author: "Ming Yang"
+output:
+  html_document:
+    code_folding: hide
+    #css: style.css
+    toc: true
+    toc_depth: 2
+    df_print: paged
+    #theme: united
+date: 'Compiled: `r format(Sys.Date(), "%B %d, %Y")`'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = T,message = F,warning = F,
+        fig.width=16,fig.height=4,cache = TRUE,
+        #fig.show='hold',
+        fig.align='center')
+
+knitr::opts_knit$set(root.dir = getwd())
+options(stringsAsFactors = F)
+library(ggplot2)
+library(gridExtra)
+library(car)
+```
+
+# Data description and visualization
+
+Data dimension: 170 metabolites X 60 samples
+
+**60 samples in total**
+
+- 5 genotypes: wt, wt/353, 74/211, 211/19, 19/74
+- 2 ages: 15d, 30d 
+- 3 batches: 1, 2, 3
+
+2 replicates per genotype per age per batch
+
+
+**I combine 5 genotypes into 3 modes**
+
+ - wt: wildtype
+ - mode.1: 74/211, 211/19, 19/74. These genotypes may extend lifespan by reducing costs of reproduction.
+ - mode.2: This genotype may provide 'longevity assurance'
+ 
+Plot two metabolite's abundance among different modes and ages as examples
+```{r fig.width=16}
+dat=readRDS('./mz.filter.dat.rds')
+df.mat=dat$edata;
+pheno=dat$pheno
+
+## log transform
+#summary(as.numeric(unlist(df.mat))) #no zero, log directly
+df.mat.log=log(df.mat)
+
+## normalize by sample
+df.scaled=scale(df.mat.log,center=T,scale=T)
+#apply(df.scaled,2,mean) #confirm
+#apply(df.scaled,2,sd) #confirm
+
+## genotype explain
+#wt is wildtype
+#wt/353 is the ‘Mode 2’, no trade-off
+#the other three are the 'Mode 1', extend lifespan by reducing costs of reproduction.
+pheno$mode='mode.1';
+pheno[pheno$genotype=='wt/353',]$mode='mode.2'
+pheno[pheno$genotype=='wt',]$mode='wt'
+#table(pheno$mode)
+#mode.1 mode.2     wt 
+#36     12     12 
+
+group.levels=c('wt 15d', 'wt 30d','mode.1 15d','mode.1 30d' ,'mode.2 15d', 'mode.2 30d')
+# select two metabolites
+pick.mz=c('Sarcosine','Reduced Glutathione');
+df.tmp=df.scaled[pick.mz,]
+plots=lapply(1:nrow(df.tmp),function(i){
+    mz=df.tmp[i,]
+    mz.name=rownames(df.tmp)[i]
+    tmp=data.frame(mz=as.numeric(mz),age=factor(pheno$age),mode=factor(pheno$mode),batch=factor(pheno$batch));
+    tmp$group=factor(paste(tmp$mode,tmp$age))
+    tmp$mode=factor(tmp$mode,levels=c('wt','mode.1','mode.2'))
+    tmp$group=factor(tmp$group,levels=group.levels)
+    ggplot(tmp,aes(x=mode,y=mz,col=age,group=group,shape=batch))+
+      geom_boxplot(outlier.shape = NA) +
+      geom_jitter(size=3,position = position_jitterdodge())+
+      theme_bw(base_size = 14)+ggtitle(mz.name)
+  })
+  do.call(grid.arrange,c(plots,ncol=2))
+
+  plots=lapply(1:nrow(df.tmp),function(i){
+    mz=df.tmp[i,]
+    mz.name=rownames(df.tmp)[i]
+    tmp=data.frame(mz=as.numeric(mz),age=factor(pheno$age),mode=factor(pheno$mode),batch=factor(pheno$batch));
+    tmp$group=factor(paste(tmp$mode,tmp$age))
+    tmp$mode=factor(tmp$mode,levels=c('wt','mode.1','mode.2'))
+    tmp$group=factor(tmp$group,levels=group.levels)
+   ggplot(tmp,aes(x=age,y=mz,col=mode,group=group,shape=batch))+
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(size=3,position = position_jitterdodge())+
+    theme_bw(base_size = 14)+ggtitle(mz.name)
+  })
+  do.call(grid.arrange,c(plots,ncol=2))
+  
+```
+
+Look at these two plots, it appears that both `mode` and `age` have a strong affect on `Sarcosine`, and only `mode` affects `Reduced Glutathione`.
+
+In the following analysis, I performed linear regression analysis on each metabolite to identify those metabolites with a significant `age` or `mode` or `age:mode interaction` effect.
+
+# linear regression on each metabolite with batch effect removed using `combat` function from `sva` R package
+
+- I performed linear regression on each metabolite using:
+**metabolite.abundance ~ age + mode + age:mode + error **
+
+- then used `Anova` to test the significance of each term, i.e., age, mode, age:mode interaction term.
+
+- The significance, or the P value, of each term for each metabolite was adjusted using `p.adjust` function in R with the `BH` method, referred to as `p.adj`.
+
+```{r}
+df.res=readRDS('mz.filter.combat.rds')
+### use genotype and age as predictor
+out=lapply(1:nrow(df.res),function(i){
+  mz=df.res[i,]
+  mz.name=rownames(df.res)[i] # fit model using df.res with age and mode as predictor, including interaction term
+  tmp=data.frame(mz=as.numeric(mz),age=factor(pheno$age),mode=factor(pheno$mode));
+  tmp$mode=factor(tmp$mode,levels=c('wt','mode.1','mode.2'))
+  x=lm(mz~age*mode,tmp )
+  x
+})
+
+# use Anova to get p values for each factor of each mz
+#Anova(out[[1]])
+sig.out=lapply(out,function(x){ #make a table
+  x1=Anova(x)
+  #x1=summary(x) #this gives you coef, coef.p.value for each term
+  pvalue=x1$`Pr(>F)`
+  #terms=rownames(x1)
+  pvalue
+})
+
+df.sig.out=Reduce(`rbind`,sig.out)
+x1=Anova(out[[1]])
+colnames(df.sig.out)=rownames(x1)
+rownames(df.sig.out)=rownames(df.res)
+df.sig.out=df.sig.out[,-4] #remove Residuals column
+#df.sig.out.adj=data.frame(matrix(p.adjust(df.sig.out,method = 'BH'),ncol=ncol(df.sig.out)))
+df.sig.out.adj=data.frame(apply(df.sig.out,2,function(i) p.adjust(i,method='BH')))
+rownames(df.sig.out.adj)=rownames(df.sig.out)
+colnames(df.sig.out.adj)=colnames(df.sig.out)
+```
+
+After regression, for each metabolite, there are 3 p.adj values, one for a predictor term:
+```{r}
+df.sig.out.adj[c(rownames(df.sig.out.adj)[1:3],pick.mz),]
+```
+
+Have a look at the P.adj distributions for these three temrs:
+```{r}
+par(mfrow=c(1,3))
+hist(df.sig.out.adj$age,main='p.adj for Age')
+hist(df.sig.out.adj$mode,main='p.adj for Mode')
+hist(df.sig.out.adj$`age:mode`,main='p.adj for Age:Mode')
+```
+
+For these 170 metabolites, after fitting this linear model, the number of metabolites that were significantly affected by terms at a p.adj<0.05 cutoff:
+
+```{r}
+#nrow(df.sig.out.adj) #170
+apply(df.sig.out.adj,2,function(i){sum(i<0.05)})
+#age     mode age:mode 
+#91      142       17 
+#rownames(df.sig.out.adj[df.sig.out.adj$mode<0.05,])
+#df.sig.out.adj['Sarcosine',]
+```
+
+
+# Groups of metabolites that are affected by age, mode or their interactions.
+
+## metabolites affected by `age` alone
+
+
+```{r fig.width=16}
+#Select some metablites to visualize the model fitting (plot predictions)
+#visreg: Visualization of regression functions
+library(visreg)
+#visreg(out[[1]],'genotype',by='age',overlay=T)
+
+# some metabolites with only age effect
+x1=df.sig.out.adj$age;x2=df.sig.out.adj$mode;x3=df.sig.out.adj$`age:mod`;
+i=which(x1<0.05 & x2>0.05 & x3>0.05)
+cat(length(i),'metabolites were only affected age\n')
+```
+
+Select one metabolite and plot its original abundance values (batch effect corrected):
+
+```{r}
+pick=i[1]
+mz.name=rownames(df.sig.out.adj[pick,])
+
+mz=df.res[pick,]
+tmp=data.frame(mz=as.numeric(mz),age=factor(pheno$age),mode=factor(pheno$mode),batch=factor(pheno$batch));
+tmp$group=factor(paste(tmp$mode,tmp$age))
+tmp$mode=factor(tmp$mode,levels=c('wt','mode.1','mode.2'))
+tmp$group=factor(tmp$group,levels=group.levels)
+
+p1=ggplot(tmp,aes(x=mode,y=mz,col=age,group=group))+
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(size=3,position = position_jitterdodge())+
+    theme_bw(base_size = 14)+ggtitle(mz.name)
+p2=ggplot(tmp,aes(x=age,y=mz,col=mode,group=group))+
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(size=3,position = position_jitterdodge())+
+    theme_bw(base_size = 14)+ggtitle(mz.name)
+do.call(grid.arrange,c(list(p1,p2),ncol=2))
+```
+
+Plot model predicted values:
+```{r}
+# Model predictions as a function of age, for the three modes
+p1=visreg(out[[pick]],'age',by='mode',overlay=F,main=paste0(mz.name,'\n\n'),gg=T)+theme_bw()
+p2=visreg(out[[pick]],'mode',by='age',overlay=F,main=paste0(mz.name,'\n\n'),gg=T)+theme_bw()
+do.call(grid.arrange,c(list(p1,p2),ncol=2))
+```
+
+## metabolites affected by `mode` alone
+
+
+
+```{r}
+# some metabolites with only mode effect
+x1=df.sig.out.adj$age;x2=df.sig.out.adj$mode;x3=df.sig.out.adj$`age:mod`;
+i=which(x1>0.05 & x2<0.05 & x3>0.05)
+cat(length(i),'metabolites were only affected mode\n')
+```
+
+
+Select one metabolite. Plot original metabolite abundance values (batch effect corrected) and model predicted values:
+```{r}
+pick=i[1]
+mz.name=rownames(df.sig.out.adj[pick,])
+
+mz=df.res[pick,]
+tmp=data.frame(mz=as.numeric(mz),age=factor(pheno$age),mode=factor(pheno$mode),batch=factor(pheno$batch));
+tmp$group=factor(paste(tmp$mode,tmp$age))
+tmp$mode=factor(tmp$mode,levels=c('wt','mode.1','mode.2'))
+tmp$group=factor(tmp$group,levels=group.levels)
+
+p1=ggplot(tmp,aes(x=mode,y=mz,col=age,group=group))+
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(size=3,position = position_jitterdodge())+
+    theme_bw(base_size = 14)+ggtitle(mz.name)
+p2=ggplot(tmp,aes(x=age,y=mz,col=mode,group=group))+
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(size=3,position = position_jitterdodge())+
+    theme_bw(base_size = 14)+ggtitle(mz.name)
+do.call(grid.arrange,c(list(p1,p2),ncol=2))
+
+p1=visreg(out[[pick]],'age',by='mode',overlay=F,main=paste0(mz.name,'\n\n'),gg=T)+theme_bw()
+p2=visreg(out[[pick]],'mode',by='age',overlay=F,main=paste0(mz.name,'\n\n'),gg=T)+theme_bw()
+do.call(grid.arrange,c(list(p1,p2),ncol=2))
+```
+
+## metabolites affected by both `age` and `mode`, but no interaction
+
+
+
+```{r}
+# some metabolites with both age and mode effect, no interaction
+x1=df.sig.out.adj$age;x2=df.sig.out.adj$mode;x3=df.sig.out.adj$`age:mod`;
+i=which(x1<0.05 & x2<0.05 & x3>0.05)
+
+cat(length(i),'metabolites were affected by both age and mode, but no interaction\n')
+```
+
+Select one metabolite. Plot original metabolite abundance values (batch effect corrected) and model predicted values:
+```{r}
+pick=i[1]
+mz.name=rownames(df.sig.out.adj[pick,])
+
+mz=df.res[pick,]
+tmp=data.frame(mz=as.numeric(mz),age=factor(pheno$age),mode=factor(pheno$mode),batch=factor(pheno$batch));
+tmp$group=factor(paste(tmp$mode,tmp$age))
+tmp$mode=factor(tmp$mode,levels=c('wt','mode.1','mode.2'))
+tmp$group=factor(tmp$group,levels=group.levels)
+
+p1=ggplot(tmp,aes(x=mode,y=mz,col=age,group=group))+
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(size=3,position = position_jitterdodge())+
+    theme_bw(base_size = 14)+ggtitle(mz.name)
+p2=ggplot(tmp,aes(x=age,y=mz,col=mode,group=group))+
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(size=3,position = position_jitterdodge())+
+    theme_bw(base_size = 14)+ggtitle(mz.name)
+do.call(grid.arrange,c(list(p1,p2),ncol=2))
+
+p1=visreg(out[[pick]],'age',by='mode',overlay=F,main=paste0(mz.name,'\n\n'),gg=T)+theme_bw()
+p2=visreg(out[[pick]],'mode',by='age',overlay=F,main=paste0(mz.name,'\n\n'),gg=T)+theme_bw()
+do.call(grid.arrange,c(list(p1,p2),ncol=2))
+```
+
+## metabolites affected by both `age` and `mode`, and their interaction
+
+
+```{r}
+# some metabolites with both age and mode effect, yes interaction
+x1=df.sig.out.adj$age;x2=df.sig.out.adj$mode;x3=df.sig.out.adj$`age:mod`;
+i=which(x1<0.05 & x2<0.05 & x3<0.05)
+cat(length(i),'metabolites were affected by both age and mode, and their interaction\n')
+```
+
+Select one metabolite. Plot original metabolite abundance values (batch effect corrected) and model predicted values:
+
+```{r}
+pick=i[1]
+mz.name=rownames(df.sig.out.adj[pick,])
+
+mz=df.res[pick,]
+tmp=data.frame(mz=as.numeric(mz),age=factor(pheno$age),mode=factor(pheno$mode),batch=factor(pheno$batch));
+tmp$group=factor(paste(tmp$mode,tmp$age))
+tmp$mode=factor(tmp$mode,levels=c('wt','mode.1','mode.2'))
+tmp$group=factor(tmp$group,levels=group.levels)
+
+
+p1=ggplot(tmp,aes(x=mode,y=mz,col=age,group=group))+
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(size=3,position = position_jitterdodge())+
+    theme_bw(base_size = 14)+ggtitle(mz.name)
+p2=ggplot(tmp,aes(x=age,y=mz,col=mode,group=group))+
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(size=3,position = position_jitterdodge())+
+    theme_bw(base_size = 14)+ggtitle(mz.name)
+do.call(grid.arrange,c(list(p1,p2),ncol=2))
+
+p1=visreg(out[[pick]],'age',by='mode',overlay=F,main=paste0(mz.name,'\n\n'),gg=T)+theme_bw()
+p2=visreg(out[[pick]],'mode',by='age',overlay=F,main=paste0(mz.name,'\n\n'),gg=T)+theme_bw()
+do.call(grid.arrange,c(list(p1,p2),ncol=2))
+```

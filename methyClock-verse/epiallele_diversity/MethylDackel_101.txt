@@ -1,0 +1,16 @@
+
+#install MethylDackel: https://github.com/dpryan79/MethylDackel, https://anaconda.org/bioconda/methyldackel
+#require htslib and libbigwig
+$ conda install -c bioconda libbigwig
+$ conda install -c bioconda htslib
+$ not use this one, as the version didn't support 'perRead' conda install -c "bioconda/label/main" methyldackel 
+$ conda install -c "bioconda/label/main" methyldackel
+
+$ MethylDackel 
+MethylDackel: A tool for processing bisulfite sequencing alignments.
+Version: 0.5.1 (using HTSlib version 1.9)
+
+#make sure `perRead` is supported
+$ salloc -N 1 -p csde -A csde  --time=2:00:00 --mem=10G
+$ MethylDackel perRead reference_GRCm38_mm10/Mus_musculus.GRCm38.dna.primary_assembly.fa mapping/SRR5195656_sorted.bam 
+

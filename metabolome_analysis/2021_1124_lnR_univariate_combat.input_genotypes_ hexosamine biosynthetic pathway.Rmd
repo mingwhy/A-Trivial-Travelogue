@@ -1,0 +1,204 @@
+---
+title: "lnR_metabolomics: univariate analysis for metabolites in the hexosamine biosynthetic pathway"
+author: "Ming Yang"
+output:
+  html_document:
+    code_folding: hide
+    #css: style.css
+    toc: true
+    toc_depth: 2
+    df_print: paged
+    #theme: united
+date: 'Compiled: `r format(Sys.Date(), "%B %d, %Y")`'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = T,message = F,warning = F,
+        fig.width=16,fig.height=4,cache = TRUE,
+        #fig.show='hold',
+        fig.align='center')
+
+knitr::opts_knit$set(root.dir = getwd())
+options(stringsAsFactors = F)
+library(ggplot2)
+library(gridExtra)
+library(car)
+```
+
+# Data description and visualization
+
+Data dimension: 170 metabolites X 60 samples
+
+**60 samples in total**
+
+- 5 genotypes: wt, wt/353, 74/211, 211/19, 19/74
+- 2 ages: 15d, 30d 
+- 3 batches: 1, 2, 3
+
+2 replicates per genotype per age per batch
+
+I refer to the **5 genotypes as 5 modes** in this file.
+
+# visual metabolites in the hexosamine biosynthetic pathway of log-transformed and sample-wise normalized data
+
+**note: metabolite abundance values were log-transformed and then sample-wise normalized (center and scale). No batch effect correction for this section's plots.**
+
+```{r fig.width=16,fig.height=16}
+dat=readRDS('./mz.filter.dat.rds')
+df.mat=dat$edata;
+pheno=dat$pheno
+
+## log transform
+#summary(as.numeric(unlist(df.mat))) #no zero, log directly
+df.mat.log=log(df.mat)
+
+## normalize by sample
+df.scaled=scale(df.mat.log,center=T,scale=T)
+#apply(df.scaled,2,mean) #confirm
+#apply(df.scaled,2,sd) #confirm
+
+## mode setting
+# trade-off
+#wt is wildtype
+#wt/353 is the ‘Mode 2’, no trade-off
+#the other three are the 'Mode 1', extend lifespan by reducing costs of reproduction.
+pheno$mode='mode.1';
+pheno[pheno$genotype=='wt/353',]$mode='mode.2'
+pheno[pheno$genotype=='wt',]$mode='wt'
+#table(pheno$mode)
+#mode.1 mode.2     wt 
+#36     12     12 
+
+#genotype
+pheno$mode=pheno$genotype
+
+#group.levels=c('wt 15d', 'wt 30d','mode.1 15d','mode.1 30d' ,'mode.2 15d', 'mode.2 30d')
+group.levels=sort(unique(paste(pheno$mode,pheno$age)))
+mode.levels=sort(unique(pheno$mode))
+
+# select two metabolites
+pick.mz=c("Glucose","Glucoronate" ,"Glucosamine-6-Phosphate", "UDP-Glucose","UDP-GlcNAc");
+df.tmp=df.scaled[pick.mz,]
+plots=lapply(1:nrow(df.tmp),function(i){
+    mz=df.tmp[i,]
+    mz.name=rownames(df.tmp)[i]
+    tmp=data.frame(mz=as.numeric(mz),age=factor(pheno$age),mode=factor(pheno$mode),batch=factor(pheno$batch));
+    tmp$group=factor(paste(tmp$mode,tmp$age))
+    tmp$group=factor(tmp$group,levels=group.levels)
+    tmp$mode=factor(tmp$mode,levels=mode.levels)
+    
+    ggplot(tmp,aes(x=mode,y=mz,col=age,group=group,shape=batch))+
+      geom_boxplot(outlier.shape = NA) +
+      geom_jitter(size=3,position = position_jitterdodge())+
+      theme_bw(base_size = 14)+ggtitle(mz.name)
+  })
+  do.call(grid.arrange,c(plots,ncol=2))
+
+  plots=lapply(1:nrow(df.tmp),function(i){
+    mz=df.tmp[i,]
+    mz.name=rownames(df.tmp)[i]
+    tmp=data.frame(mz=as.numeric(mz),age=factor(pheno$age),mode=factor(pheno$mode),batch=factor(pheno$batch));
+    tmp$group=factor(paste(tmp$mode,tmp$age))
+    tmp$group=factor(tmp$group,levels=group.levels)
+    tmp$mode=factor(tmp$mode,levels=mode.levels)
+   ggplot(tmp,aes(x=age,y=mz,col=mode,group=group,shape=batch))+
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(size=3,position = position_jitterdodge())+
+    theme_bw(base_size = 14)+ggtitle(mz.name)
+  })
+  do.call(grid.arrange,c(plots,ncol=2))
+  
+```
+
+
+# linear regression on each metabolite with batch effect removed using `combat` function from `sva` R package
+
+- **The data used in linear modelling have already been corrected for batch effect.**
+
+- I performed linear regression on each metabolite using:
+**metabolite.abundance ~ age + mode + age:mode + error **
+
+- I extracted the variance explained by the fitted linear model for each metabolite.
+
+- I used `Anova` to test the significance of each term, i.e., age, mode, age:mode interaction term.
+
+- The significance, or the P value, of each term for each metabolite was adjusted using `p.adjust` function in R with the `BH` method, referred to as `p.adj`.
+
+```{r}
+df.res=readRDS('mz.filter.combat.rds')
+### use genotype and age as predictor
+out=lapply(1:nrow(df.res),function(i){
+  mz=df.res[i,]
+  mz.name=rownames(df.res)[i] # fit model using df.res with age and mode as predictor, including interaction term
+  tmp=data.frame(mz=as.numeric(mz),age=factor(pheno$age),mode=factor(pheno$mode));
+  x=lm(mz~age*mode,tmp )
+  x
+})
+
+# use Anova to get p values for each factor of each mz
+#Anova(out[[1]])
+sig.out=lapply(out,function(x){ #make a table
+  x1=Anova(x)
+  #x1=summary(x) #this gives you coef, coef.p.value for each term
+  pvalue=x1$`Pr(>F)`
+  #terms=rownames(x1)
+  pvalue
+})
+
+df.sig.out=Reduce(`rbind`,sig.out)
+x1=Anova(out[[1]])
+colnames(df.sig.out)=rownames(x1)
+rownames(df.sig.out)=rownames(df.res)
+df.sig.out=df.sig.out[,-4] #remove Residuals column
+#df.sig.out.adj=data.frame(matrix(p.adjust(df.sig.out,method = 'BH'),ncol=ncol(df.sig.out)))
+df.sig.out.adj=data.frame(apply(df.sig.out,2,function(i) p.adjust(i,method='BH')))
+#df.sig.out.adj=data.frame(apply(df.sig.out,2,function(i) p.adjust(i,method='fdr')))
+rownames(df.sig.out.adj)=rownames(df.sig.out)
+colnames(df.sig.out.adj)=colnames(df.sig.out)
+```
+
+
+After regression, for each metabolite, there are 3 p.adj values, one for a predictor term:
+```{r}
+df.sig.out.adj[pick.mz,]
+df.sig.out.adj2=df.sig.out.adj;
+```
+# variance explained by mode for these metabolites
+
+```{r}
+i=which(rownames(df.sig.out.adj) %in% pick.mz)
+out2=out[i]
+for(i in 1:length(out2)){
+  x=out2[[i]]
+  cat('#mz',pick.mz[i],'\n')
+  print(Anova(x))
+  cat('\n')
+}
+```
+# visual metabolites in the hexosamine biosynthetic pathway of batch-effect corrected data
+
+```{r}
+for( pick in pick.mz){
+mz.name=rownames(df.sig.out.adj2[pick,])
+
+mz=df.res[pick,]
+tmp=data.frame(mz=as.numeric(mz),age=factor(pheno$age),mode=factor(pheno$mode),batch=factor(pheno$batch));
+tmp$group=factor(paste(tmp$mode,tmp$age))
+tmp$group=factor(tmp$group,levels=group.levels)
+tmp$mode=factor(tmp$mode,levels=mode.levels)
+
+p1=ggplot(tmp,aes(x=mode,y=mz,col=age,group=group))+
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(size=2,position = position_jitterdodge())+
+    theme_bw(base_size = 14)+ggtitle(mz.name)
+p2=ggplot(tmp,aes(x=age,y=mz,col=mode,group=group))+
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(size=2,position = position_jitterdodge())+
+    theme_bw(base_size = 14)+ggtitle(mz.name)
+do.call(grid.arrange,c(list(p1,p2),ncol=2))
+}
+```
+
+```{r}
+sessionInfo()
+```

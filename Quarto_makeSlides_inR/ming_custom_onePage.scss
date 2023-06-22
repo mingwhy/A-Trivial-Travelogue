@@ -1,0 +1,76 @@
+/*-- scss:defaults --*/
+
+//$body-bg: #191919;
+//$body-color: #fff;
+$body-bg: #fff;
+$body-color: #191919;
+$link-color: #42affa;
+
+/*-- scss:rules --*/
+
+.reveal .slide blockquote {
+  border-top: 1px solid $text-muted;  
+  border-left: 3px solid $text-muted;
+  border-bottom: 1000px solid $text-muted;  
+  padding-left: 0.5em;
+  padding-bottom: 1em;
+  margin-top: 1px;
+  margin-bottom: 1px;
+}
+
+$code-block-bg: #ded9ca;
+$code-block-border-color: #000000;
+
+.title {
+  font-size: 100px !important;
+  //color: white !important;
+  color: black !important;
+}
+
+.author {
+  font-size: 40px;
+  //color: white !important;
+  color: black !important;
+}
+
+.date {
+  font-size: 40px;
+  //color: white !important;
+  color: black !important;
+}
+
+.imgContainer{
+    float:left;
+}
+
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
+
+
+  .sectionhead {
+    font-size: 1em;
+    text-align: center;
+    //color: $presentation-heading-color;
+    //font-family: $presentation-heading-font;
+    //background-color: $body-bg;
+    margin: 1px;
+    padding: 2px 2px 2px 2px;
+    width: 120px;
+    border-left: 10px solid;
+  }
+
+  .reveal section p {
+      display: inline-block;
+      font-size: 0.8em;
+      line-height: 1.2em;
+      vertical-align: top;
+    }
+
+  .reveal .footer {
+    font-size: 0.5em !important;
+    text-align: center !important;
+  }

@@ -1,0 +1,17 @@
+---
+title: "Make a Pacman"        
+author: "Awesome me"              
+date: "2022-09-23"            
+output:                       
+  html_document             
+---
+
+Let's create a Pacman.             
+
+```{r, animation.hook='gifski'}    
+for (i in 1:2) {
+  pie(c(i %% 2, 6), col = c('red', 'yellow'), labels = NA)
+}
+```
+
+
