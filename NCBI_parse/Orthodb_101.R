@@ -83,5 +83,5 @@ saveRDS(oneTo1_3species,'oneTo1_3species.rds')
 #               col.names=c('OrthoDB.gene.id','external.gene.identifier','external.DB.name')
 
 # use terminal instead:
-#$grep '^9606_0|^10090_0|^10116_0' odb11v0_gene_xrefs.tab >tmp.out
-#$grep '^9606_0|^10090_0|^10116_0' odb11v0_genes.tab >tmp2.out
+#$grep -E '^9606|^10090|^10116' odb11v0_genes.tab >odb11v0_genes_3species.tab
+
