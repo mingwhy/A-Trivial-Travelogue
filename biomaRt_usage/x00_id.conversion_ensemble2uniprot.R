@@ -3,6 +3,12 @@ library(biomaRt)
 packageVersion("biomaRt") #‘2.50.3’
 
 biolist <- as.data.frame(listMarts())
+#               biomart                version
+#1 ENSEMBL_MART_ENSEMBL      Ensembl Genes 109
+#2   ENSEMBL_MART_MOUSE      Mouse strains 109
+#3     ENSEMBL_MART_SNP  Ensembl Variation 109
+#4 ENSEMBL_MART_FUNCGEN Ensembl Regulation 109
+
 ensembl=useMart("ensembl")
 esemblist <- as.data.frame(listDatasets(ensembl))
 esemblist[grep('musculus',esemblist$dataset),]
