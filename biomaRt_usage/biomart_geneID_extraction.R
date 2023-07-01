@@ -1,4 +1,7 @@
 
+#https://stackoverflow.com/questions/48262384/increase-r-studios-connection-timeout-limit
+options(timeout = max(4000000, getOption("timeout")))
+
 #https://www.biostars.org/p/429062/
 library(biomaRt)
 packageVersion("biomaRt") #‘2.50.3’
