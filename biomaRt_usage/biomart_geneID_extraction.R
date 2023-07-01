@@ -2,6 +2,7 @@
 #https://stackoverflow.com/questions/48262384/increase-r-studios-connection-timeout-limit
 options(timeout = max(4000000, getOption("timeout")))
 
+#https://support.bioconductor.org/p/9139740/
 #https://www.biostars.org/p/429062/
 library(biomaRt)
 packageVersion("biomaRt") #‘2.50.3’
@@ -34,7 +35,7 @@ annotLookup <- getBM(
   attributes = c(
     'ensembl_gene_id',
     'gene_biotype',
-    'external_gene_name','external_synonym','source_name',
+    'external_gene_name',#'external_synonym','source_name',
     'uniprot_gn_symbol',
     'uniprot_gn_id',
     'mgi_symbol','description',
