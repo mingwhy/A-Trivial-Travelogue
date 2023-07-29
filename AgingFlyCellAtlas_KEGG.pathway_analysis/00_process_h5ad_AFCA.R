@@ -9,6 +9,19 @@ library(SummarizedExperiment)
 library(viridis)
 library(ggpubr)
 
+###############################################################
+## read in data
+sce=readH5AD('~/Documents/Data_AgingFlyCellAtlas/adata_headBody_S_v1.0.h5ad') # 15992 566254 
+sce #SingleCellExperiment,  15992 566254 
+cell.meta=colData(sce)
+colnames(cell.meta)
+table(cell.meta$sex,cell.meta$age)
+head(cell.meta)
+#table(cell.meta$afca_annotation_broad,cell.meta$afca_annotation)
+length(table(cell.meta$afca_annotation)) # 163 cell types
+
+genes=rownames(sce)
+length(genes) #15992 genes
 
 ###############################################################
 ## use biomaRt to get gene chr info 
@@ -31,31 +44,42 @@ attributes = listAttributes(ensembl)
 
 attributes[grep('dmel',attributes$name),]
 grep('transcript',attributes$name,value=TRUE,ignore.case = TRUE)
+head(attributes$name,80)
 
-t2g<-getBM(attributes=c('ensembl_gene_id','chromosome_name','start_position','end_position',
-                        'ensembl_transcript_id','flybase_transcript_id',
-                        "transcript_start", "transcript_end",
-                        'transcription_start_site', "transcript_length","transcript_count"), mart = ensembl)
-dim(t2g) #41209    11
+t2g<-getBM(attributes=c('ensembl_gene_id',"external_gene_name",
+                        'chromosome_name','start_position','end_position',
+                        "flybase_gene_id","flybasename_gene","entrezgene_id"),
+                        #'ensembl_transcript_id','flybase_transcript_id',
+                        #"transcript_start", "transcript_end",
+                        #'transcription_start_site', "transcript_length","transcript_count"), 
+                        mart = ensembl)
+dim(t2g) #26408    11
 head(t2g)
 saveRDS(t2g,'t2g_chr.coord.rds')
 }
-t2g=readRDS('t2g_chr.coord.rds')
+t2g=readRDS('~/Documents/Data_AgingFlyCellAtlas/t2g_chr.coord.rds')
+dim(t2g) #26408
 
-###############################################################
-## read in data
-sce=readH5AD('adata_headBody_S_v1.0.h5ad') # 22966 31001 
-sce #SingleCellExperiment,  15992 566254 
-cell.meta=colData(sce)
-colnames(cell.meta)
-table(cell.meta$sex,cell.meta$age)
-head(cell.meta)
-#table(cell.meta$afca_annotation_broad,cell.meta$afca_annotation)
-length(table(cell.meta$afca_annotation)) # 163 cell types
+missing.genes=genes[!genes %in% t2g$external_gene_name]
+length(missing.genes) #386
 
-genes=rownames(sce)
-length(genes) #15992 genes
+test.out=AnnotationDbi::select(org.Dm.eg.db, keys=missing.genes, keytype="SYMBOL",
+                               #columns=c("SYMBOL","GENENAME",'FLYBASE','ALIAS','ACCNUM','ENTREZID') )
+                               columns=c("SYMBOL","GENENAME",'FLYBASE','FLYBASECG','ENTREZID') )
+dim(test.out) #386 x 2
+head(test.out)
+test.out$original.id=test.inp;
 
+x1=data.frame(t2g$external_gene_name,t2g$external_gene_name,t2g$flybase_gene_id)
+colnames(x1)=c('SYMBOL','GENENAME','FLYBASE')
+x2=rbind(test.out[,c(1,2,3)],x1)
+sum(genes %in% x2$SYMBOL) #15992
+x2$original.id=x2$SYMBOL
+
+saveRDS(x2,'AFCA_gene.id.rds')
+
+################################################################
+################################################################
 ################################################################
 ## use AnnotationDbi and org.Dm.eg.db to get gene symbols 
 # https://github.com/mingwhy/bioinfo_homemade_tools/blob/main/used.cases/biomaRt_usage/gene.id_converter_AnnotationDbi_bitr.R
@@ -66,9 +90,9 @@ columns(org.Dm.eg.db)
 keytypes(org.Dm.eg.db)
 
 test.inp=genes
-test.out=select(org.Dm.eg.db, keys=test.inp, keytype="SYMBOL",
+test.out=AnnotationDbi::select(org.Dm.eg.db, keys=test.inp, keytype="SYMBOL",
                 #columns=c("SYMBOL","GENENAME",'FLYBASE','ALIAS','ACCNUM','ENTREZID') )
-                columns=c("SYMBOL","GENENAME",'FLYBASE','ENTREZID') )
+                columns=c("SYMBOL","GENENAME",'FLYBASE','FLYBASECG','ENTREZID') )
 length(test.inp) #15992 genes
 dim(test.out) #15992 x 2
 head(test.out)
@@ -80,6 +104,9 @@ dim(keep1) #15937
 
 ## save unmapped ones aned submit to flybase for more information
 sum(is.na(test.out$GENENAME)) #55
+missing.genes=test.out[is.na(test.out$GENENAME),]
+missing.genes$original.id %in% t2g
+
 write.table(test.out[is.na(test.out$GENENAME),]$SYMBOL,'genes_for_flybase.txt',quote=F,row.names = F,col.names = F)
 
 # go to http://flybase.org/batchdownload
