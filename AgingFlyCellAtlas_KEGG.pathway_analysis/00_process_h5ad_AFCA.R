@@ -76,7 +76,11 @@ x2=rbind(test.out[,c(1,2,3)],x1)
 sum(genes %in% x2$SYMBOL) #15992
 x2$original.id=x2$SYMBOL
 
-saveRDS(x2,'AFCA_gene.id.rds')
+df.genes=x2[x2$original.id %in% genes,]
+dim(df.genes) #16143
+names(which(table(df.genes$original.id)>1))
+
+saveRDS(df.genes,'AFCA_gene.id.rds')
 
 ################################################################
 ################################################################
