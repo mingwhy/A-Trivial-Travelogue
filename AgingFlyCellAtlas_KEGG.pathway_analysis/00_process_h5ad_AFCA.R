@@ -10,7 +10,7 @@ library(viridis)
 library(ggpubr)
 
 ###############################################################
-## read in data
+## read in data: https://hongjielilab.shinyapps.io/AFCA/
 sce=readH5AD('~/Documents/Data_AgingFlyCellAtlas/adata_headBody_S_v1.0.h5ad') # 15992 566254 
 sce #SingleCellExperiment,  15992 566254 
 cell.meta=colData(sce)
