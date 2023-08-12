@@ -6,10 +6,10 @@
 # https://sites.google.com/view/jessica-leung/home/teaching/using-gurobi-with-r-and-python
 ##Using Gurobi with RStudio
 #1. Register a Gurobi account as an academic user at https://pages.gurobi.com/registration . Please register as a student using your university email address and don’t lose the password.
-#2. Request for a license at  https://www.gurobi.com/downloads/end-user-license-agreement-academic/, enter User Portal, and you will obtain a Gurobi key. 
-# Copy and paste the Gurobi key to the terminal: $grbgetkey xxxxxx
-#3. Go to https://www.gurobi.com/downloads/gurobi-optimizer-eula/ , read and accept the End User License Agreement. Then download the current version of Gurobi optimizer. 
+#2. Go to https://www.gurobi.com/downloads/gurobi-optimizer-eula/ , read and accept the End User License Agreement. Then download the current version of Gurobi optimizer. 
 # Install the optimizer with default settings.
+#3. Request for a license at  https://www.gurobi.com/downloads/end-user-license-agreement-academic/, enter User Portal, and you will obtain a Gurobi key. 
+# Copy and paste the Gurobi key to the terminal: $grbgetkey xxxxxx
 #4. Run the following R command in RStudio:
 install.packages('/Library/gurobi1002/macos_universal2/R/gurobi_10.0-2_R_4.2.0.tgz', repos=NULL)
 #5. Now you should be able to solve linear programming problem with Gurobi in RStudio. Try running the following piece of code:
