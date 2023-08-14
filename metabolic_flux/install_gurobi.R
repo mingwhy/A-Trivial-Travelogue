@@ -1,3 +1,28 @@
+
+# How do I install Gurobi for Matlab?
+# https://support.gurobi.com/hc/en-us/articles/4533938303505-How-do-I-install-Gurobi-for-Matlab-
+the default <installdir> for Gurobi 10.0.2 is /Library/gurobi1002/macos_universal2 for Mac
+To get started, type the following commands within MATLAB to change to the matlab directory and call gurobi_setup:
+
+>> cd /Library/gurobi1002/macos_universal2/matlab
+>> gurobi_setup
+
+The MATLAB interface for Gurobi 10.0.2 has been installed.
+
+The directory
+    /Library/gurobi1002/macos_universal2/matlab/
+has been added to the MATLAB path.
+To use Gurobi regularly, you must save this new path definition.
+To do this, type the command
+    savepath
+at the MATLAB prompt. Please consult the MATLAB documentation
+if necessary.
+or you need to type below everytime you use
+>> addpath('/Users/ming/Documents/bioinfo_software/GEM_metabolic.models/RAVEN-main')
+
+view all path:
+>> path
+#####################################################
 # install gurobi (solver algorithm)
 
 # https://www.gurobi.com/features/academic-named-user-license/
