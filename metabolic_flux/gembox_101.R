@@ -32,4 +32,9 @@ lapply(files, source)
 # there is `de.and.gsea.res.RData` in folder `expression`.
 # go to `covid_metabolism/GEM` folder, run `prepare.data.R` and `imat.and.mta.R` scripts.
 
+there is a error in `achr.cpp` in gembox, either fix it and reload while using it via `
+Rcpp::sourceCpp('achr_ming.cpp')`.
+Alternatively fixing achr.cpp (check out FIX), re-install gembox from load folder
+install.packages("~/Downloads/gembox-ming/", repos = NULL, type = "source")
+
 
