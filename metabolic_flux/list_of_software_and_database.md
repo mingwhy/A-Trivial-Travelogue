@@ -37,6 +37,13 @@ Ravi, Sudharshan, and Rudiyanto Gunawan. "ΔFBA—Predicting metabolic flux alte
 https://github.com/HAHerrmann/FluxSamplingComparison
 Herrmann, Helena A., et al. "Flux sampling is a powerful tool to study metabolism under changing environmental conditions." NPJ systems biology and applications 5.1 (2019): 32.
 
+## sampleCbModel 
+sampleCbModel function implemetned in Cobra Toolbox
+https://opencobra.github.io/cobratoolbox/latest/modules/analysis/sampling/index.html
+
+Showcase: https://github.com/ankueken/Chlamy_model/blob/master/sampling_sst_f.m
+Küken, Anika, et al. "Effects of microcompartmentation on flux distribution and metabolic pools in Chlamydomonas reinhardtii chloroplasts." Elife 7 (2018): e37960. https://elifesciences.org/articles/37960
+
 ## GEM Models
 H. Wang, J. L. Robinson, P. Kocabas, J. Gustafsson, M. Anton, P.-E. Cholley, et al. Genome-scale metabolic network reconstruction of model animals as a platform for translational research. PNAS 118, e2102344118 (2021).
 
