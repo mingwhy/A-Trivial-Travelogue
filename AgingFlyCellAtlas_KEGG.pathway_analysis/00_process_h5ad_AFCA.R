@@ -8,9 +8,10 @@ library(zellkonverter)
 library(SummarizedExperiment)
 library(viridis)
 library(ggpubr)
-
+library(org.Dm.eg.db)
 ###############################################################
 ## read in data: https://hongjielilab.shinyapps.io/AFCA/
+if(F){
 sce=readH5AD('~/Documents/Data_AgingFlyCellAtlas/adata_headBody_S_v1.0.h5ad') # 15992 566254 
 sce #SingleCellExperiment,  15992 566254 
 cell.meta=colData(sce)
@@ -22,7 +23,11 @@ length(table(cell.meta$afca_annotation)) # 163 cell types
 
 genes=rownames(sce)
 length(genes) #15992 genes
-
+saveRDS(data.frame(original.id=genes),'all_genes.rds')
+}
+genes=readRDS('all_genes.rds')
+genes=genes[,1]
+length(genes) #15992 genes
 ###############################################################
 ## use biomaRt to get gene chr info 
 # https://github.com/mingwhy/bioinfo_homemade_tools/tree/main/used.cases/biomaRt_usage
@@ -66,13 +71,13 @@ length(missing.genes) #386
 test.out=AnnotationDbi::select(org.Dm.eg.db, keys=missing.genes, keytype="SYMBOL",
                                #columns=c("SYMBOL","GENENAME",'FLYBASE','ALIAS','ACCNUM','ENTREZID') )
                                columns=c("SYMBOL","GENENAME",'FLYBASE','FLYBASECG','ENTREZID') )
-dim(test.out) #386 x 2
+dim(test.out) #386 x 5
 head(test.out)
 test.out$original.id=test.inp;
 
-x1=data.frame(t2g$external_gene_name,t2g$external_gene_name,t2g$flybase_gene_id)
-colnames(x1)=c('SYMBOL','GENENAME','FLYBASE')
-x2=rbind(test.out[,c(1,2,3)],x1)
+x1=data.frame(t2g$external_gene_name,t2g$external_gene_name,t2g$flybase_gene_id,t2g$entrezgene_id)
+colnames(x1)=c('SYMBOL','GENENAME','FLYBASE','ENTREZID')
+x2=rbind(test.out[,c(1,2,3,5)],x1)
 sum(genes %in% x2$SYMBOL) #15992
 x2$original.id=x2$SYMBOL
 
@@ -81,6 +86,38 @@ dim(df.genes) #16143
 names(which(table(df.genes$original.id)>1))
 
 saveRDS(df.genes,'AFCA_gene.id.rds')
+
+################################################################
+## orthologs betweeen human and fly, create ENTREZID mapping 
+# https://bdsc.indiana.edu/stocks/hd/human_gene_fly_homolog.html
+# `You can download these tables for local browsing fly_ortholog.csv, human_ortholog.csv.`
+fly_ortholog=data.table::fread('hd_fly_ortholog.csv')
+human_ortholog=data.table::fread('hd_human_ortholog.csv')
+dim(fly_ortholog) #20033  5
+dim(human_ortholog)#25607  7
+sum(unique(df.genes$FLYBASE) %in% unique(fly_ortholog$FBgn)) #6743
+sum(unique(df.genes$FLYBASE) %in% unique(human_ortholog$FBgn) )#8597
+colnames(human_ortholog)
+human_ortholog=human_ortholog[,c(1,2,3,5)]
+
+library(org.Hs.eg.db)
+hs.out=AnnotationDbi::select(org.Hs.eg.db, keys=unique(human_ortholog$Human_gene), keytype="SYMBOL",
+                               columns=c("SYMBOL","GENENAME",'ENTREZID') )
+tmp=hs.out[duplicated(hs.out$SYMBOL),] #4 human gene symbols were mapped to multiple ENTREZID
+hs.out[hs.out$SYMBOL %in% tmp$SYMBOL,] #keep one ENTREZID per human gene
+
+hs.out=hs.out[!duplicated(hs.out$SYMBOL),]
+dfc=merge(hs.out,human_ortholog,by.x='SYMBOL',by.y='Human_gene')
+head(dfc)
+colnames(dfc)=c('human_gene_symbol','human_gene_name',
+                'human_entrezid','FBgn','fly_gene_symbol','human_HGNC')
+
+dfc2=merge(df.genes,dfc,by.x='FLYBASE',by.y='FBgn')
+dim(dfc2) #25643
+sum(dfc2$fly_gene_symbol==dfc2$SYMBOL) 
+head(dfc2[dfc2$fly_gene_symbol!=dfc2$SYMBOL,])
+head(dfc2)
+saveRDS(dfc2,'human_fly_ortholog_entrezid.rds')
 
 ################################################################
 ################################################################
