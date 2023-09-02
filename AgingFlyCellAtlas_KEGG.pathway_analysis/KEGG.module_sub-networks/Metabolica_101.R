@@ -62,8 +62,9 @@ res <- metabolica(nodes.vals=nodeVals, subgraph = my_producer$produceRigraph,
                   maxnum = my_producer$maxnum*1.5)
 names(res) #"node.signal" "sig.dif"  
 length(res$node.signal) # for this metabolite, node.signal across 4950 samples
-unique(res$node.signal)
-res$sig.dif #10.00000 29.94719
+tail(res$node.signal)
+length(res$sig.dif) #113: 10.00000 29.94719 ... 
+# difference bewteen iterations when calculating this node signal
 
 ##################################################
 #overlap with metabolome measured data
