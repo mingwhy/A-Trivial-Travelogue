@@ -32,6 +32,9 @@ table(unlist(lapply(mz.produced,length))) #each sub-graph only produce one met
 mz.produced=unlist(mz.produced)
 which(mz.produced=='cpd:C00388')
 all_producers[[718]] #sub-network which produce Histamine
+length(unique(mz.produced)) #1270
+length(mz.produced) #1559
+# one metabolite might be generated via multiple modules
 
 cluster.names=lapply(1:length(all_producers),function(i){
   all_producers[[i]]$cluster
@@ -68,7 +71,7 @@ length(res$sig.dif) #113: 10.00000 29.94719 ...
 
 ##################################################
 #overlap with metabolome measured data
-load('~/Documents/aging_metabolic.models/age-associated.metabolites.for.Ming')
+load('~/Documents/aging_metabolism/age-associated.metabolites.for.Ming')
 ls() #"cmat",age-independent covariance between metabolites 
 # "for.Ming",  mz ~ age betas 
 mz.age.betas=for.Ming
@@ -98,11 +101,17 @@ grep('hsa00340',names(all_producers)) #14 sub-networks
 names(all_producers)[grep('hsa00340',names(all_producers))]
 mz.start[grep('hsa00340',names(all_producers))]
 
-
+grep('C00135', names(all_producers)); #C00135 L-Histidine
+names(all_producers)[grep('C00135', names(all_producers))]
+#"cpd:C00135-hsa00340_SIF" "cpd:C00135-hsa00410_SIF"
+# one metabolite might be generated via multiple modules
 i=718; cpd='C00388'; #Histamine
 i=710; cpd='C00025'; #L-Glutamate;
-# L-Histidine; C00135
-for(i in grep('hsa00340',names(all_producers))){
+# hsa0041, beta-Alanine metabolism,https://www.genome.jp/entry/hsa00410
+#	hsa00340, Histidine metabolism,https://www.genome.jp/entry/pathway+hsa00340
+pathway.id='hsa00410';
+#for(i in grep(pathway.id,names(all_producers))){
+for(i in grep(pathway.id,names(all_producers))){
     
   my_producer <- all_producers[[i]] # i can 1 to length(all_producers)
   cpd=gsub('cpd:','',my_producer$isProduced)
@@ -118,9 +127,9 @@ for(i in grep('hsa00340',names(all_producers))){
   
   # figure: kegg.native 
   pv.out <- pathview(cpd.data = inp.cpd, 
-                     pathway.id ='00340', species = "hsa", 
+                     pathway.id =gsub('hsa','',pathway.id), species = "hsa", 
                      #out.suffix = "hsa00340_C00388.cpd");
-                     out.suffix = paste0("hsa00340_",cpd,'.cpd'));
+                     out.suffix = paste0(pathway.id,"_",cpd,'.cpd'));
   
   str(pv.out)
   names(pv.out)
@@ -128,9 +137,9 @@ for(i in grep('hsa00340',names(all_producers))){
   head(pv.out$plot.data.cpd)
   # figure: graphviz
   pv.out <- pathview(cpd.data = inp.cpd, 
-                     pathway.id ='00340', species = "hsa", 
+                     pathway.id =gsub('hsa','',pathway.id), species = "hsa", 
                      kegg.native = F,
-                     out.suffix = paste0("hsa00340_",cpd,'.cpd'));
+                     out.suffix = paste0(pathway.id,"_",cpd,'.cpd'));
 }  
 
 
