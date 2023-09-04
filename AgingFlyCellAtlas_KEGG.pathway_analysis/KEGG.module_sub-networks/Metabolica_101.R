@@ -143,4 +143,62 @@ for(i in grep(pathway.id,names(all_producers))){
 }  
 
 
+###################################################
+overlap.mz=mz.age.betas[tmp %in% mz.produced,]$KEGGid
+
+# pathview: https://bioconductor.org/packages/release/bioc/html/pathview.html
+library(pathview)
+library(igraph)
+load("./files/all_producers.RData")
+length(all_producers) #1559, each one <=> one metabolite
+names(all_producers)
+
+mz.produced=lapply(1:length(all_producers),function(i){
+  all_producers[[i]]$isProduced
+})
+table(unlist(lapply(mz.produced,length))) #each sub-graph only produce one met
+mz.produced=unlist(mz.produced)
+
+for(i in overlap.mz){
+    pathway.index=grep(paste0('cpd:',i),names(all_producers))
+    names(all_producers)[pathway.index]
+    
+    if(length(pathway.index)==0){next}
+    for(j in pathway.index){
+      
+      my_producer <- all_producers[[j]] # i can 1 to length(all_producers)
+      pathway.id=gsub('hsa|_SIF','',my_producer$cluster)
+      cpd=gsub('cpd:','',my_producer$isProduced)
+      #g<-my_producer$clusteRigraph
+      g<-my_producer$produceRigraph
+      node.names=V(g) #E(g)
+      node.names=names(node.names)
+      node.names=node.names[grep('cpd',node.names)]
+      node.names
+      inp.cpd=rep(1,length(node.names))
+      names(inp.cpd)=gsub('cpd:','',node.names)
+      my_producer$cluster #"hsa00340_SIF"
+      
+      # figure: kegg.native 
+      r=tryCatch(
+        pv.out <- pathview(cpd.data = inp.cpd, 
+                           pathway.id =pathway.id, species = "hsa", 
+                           #out.suffix = "hsa00340_C00388.cpd");
+                           out.suffix = cpd),
+        error=function(c)'error')
+      if(r=='error'){next }
+      str(pv.out)
+      names(pv.out)
+      head(pv.out$plot.data.gene)
+      head(pv.out$plot.data.cpd)
+      # figure: graphviz
+      pv.out <- pathview(cpd.data = inp.cpd, 
+                         pathway.id =pathway.id, species = "hsa", 
+                         kegg.native = F,
+                         out.suffix = cpd);
+    }
+}  
+
+
+
 
