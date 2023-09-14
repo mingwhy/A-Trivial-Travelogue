@@ -1,6 +1,6 @@
 library(pathview)
 library(XML)
-library(graph)
+library(graph) #use graph not igraph!!!
 library(KEGGgraph)
 (files=Sys.glob('pathview_Rscripts/*'))
 #for(file in files){source(file)}
@@ -62,6 +62,9 @@ names(kegg.nodes) <- sapply(kegg.nodes, getEntryID)
 pathway <- new("KEGGPathway", pathwayInfo = kegg.pathwayinfo,
                nodes = kegg.nodes, edges = kegg.edges, reactions = kegg.reactions)
 #return(pathway)
+length(kegg.nodes) #87
+length(kegg.edges) #24
+length(kegg.reactions) #16
 
 ## now, `KEGGpathway2Graph2.R`
 genesOnly = FALSE;expandGenes = FALSE; split.group=FALSE; check.reaction=TRUE;
@@ -76,8 +79,8 @@ if (expandGenes){
 }
 knodes <- graph::nodes(pathway)
 kedges <- graph::edges(pathway)
-node.entryIDs <- getEntryID(knodes)
-edge.entryIDs <- getEntryID(kedges)
+node.entryIDs <- getEntryID(knodes) #kegg.nodes
+edge.entryIDs <- getEntryID(kedges) #each row, a pair of nodes
 V <- node.entryIDs
 edL <- vector("list", length = length(V))
 names(edL) <- V
@@ -99,14 +102,19 @@ if (is.null(nrow(edge.entryIDs))) {
     }
   }
 }
+length(V) #87
+length(edL) #87, each element <=> each node
 gR <- new("graphNEL", nodes = V, edgeL = edL, edgemode = "directed")
 
 if(check.reaction & length(rdata)>0){
-  r2e.res=reaction2edge(pathway, gR)
+  r2e.res=reaction2edge(pathway, gR) #`reaction2edge.R`
+  # `reaction2edge` is the critical function to construct gene-compound graph
   gR=r2e.res[[1]]
   kedges=r2e.res[[2]]
   knodes=r2e.res[[3]]
 }
+length(kedges) #36
+length(knodes) #88
 
 names(kedges) <- sapply(kedges, function(x) paste(getEntryID(x),
                                                   collapse = "~"))
@@ -121,3 +129,17 @@ if (genesOnly) {
 }
 #return(gR)
 gR
+
+######################################################3
+# R package graph, https://bioconductor.org/packages/release/bioc/html/graph.html
+#https://bioconductor.org/packages/release/bioc/vignettes/graph/inst/doc/GraphClass.html
+#nodes(gR);edges(gR);degree(gR) #inDegree, outDegree
+# locate target metabolite and extract 1-step neighbors for plot
+
+node.data=try(node.info(gR), silent=T)
+table(node.data$type)
+
+plot.data.gene=node.map(gene.data, node.data,
+                        node.types=gene.node.type, node.sum=node.sum, 
+                        entrez.gnodes=entrez.gnodes)
+

@@ -1,7 +1,7 @@
 
 library(pathview)
 library(XML)
-library(graph)
+library(graph) #use graph not igraph!!!
 library(KEGGgraph)
 load("../files/all_producers.RData")
 
@@ -258,8 +258,11 @@ pathway.id=gsub('hsa|_SIF','',my_producer$cluster)
 
   if(species=="ko") gene.node.type="ortholog" else gene.node.type="gene"
   
+  # map kegg gene id to gene symbols
   if((!is.null(gene.data) |map.null) & sum(node.data$type==gene.node.type)>1){
-    plot.data.gene=node.map(gene.data, node.data, node.types=gene.node.type, node.sum=node.sum, entrez.gnodes=entrez.gnodes)
+    plot.data.gene=node.map(gene.data, node.data,
+                            node.types=gene.node.type, node.sum=node.sum, 
+                            entrez.gnodes=entrez.gnodes)
     kng=plot.data.gene$kegg.names
     kng.char=gsub("[0-9]", "", unlist(kng))
     if(any(kng.char>"")) entrez.gnodes=FALSE
@@ -279,7 +282,8 @@ pathway.id=gsub('hsa|_SIF','',my_producer$cluster)
       }
       cols.ts.gene=node.color(plot.data.gene, limit$gene, bins$gene, both.dirs=both.dirs$gene, trans.fun=trans.fun$gene, discrete=discrete$gene, low=low$gene, mid=mid$gene, high=high$gene,  na.col=na.col)
     } else plot.data.gene=cols.ts.gene=NULL
-          
+
+    # map kegg compound id         
     if((!is.null(cpd.data) | map.null) & sum(node.data$type=="compound")>1){
 #          if(sum(node.data$type=="compound")>1){
             plot.data.cpd=node.map(cpd.data, node.data, node.types="compound", node.sum=node.sum)
@@ -300,7 +304,13 @@ pathway.id=gsub('hsa|_SIF','',my_producer$cluster)
   } else{
     library(Rgraphviz) #to use `layoutGraph`
     #pv.pars= keggview.graph(plot.data.gene=plot.data.gene, cols.ts.gene=cols.ts.gene, plot.data.cpd=plot.data.cpd, cols.ts.cpd=cols.ts.cpd, node.data=node.data, path.graph=gR1, pathway.name=pathway.name[i],  map.cpdname=map.cpdname, split.group=split.group, limit=limit, bins=bins, both.dirs=both.dirs, discrete=discrete, low=low, mid=mid, high=high, na.col=na.col, ...)
-    pv.pars= keggview.graph(plot.data.gene=plot.data.gene, cols.ts.gene=cols.ts.gene, plot.data.cpd=plot.data.cpd, cols.ts.cpd=cols.ts.cpd, node.data=node.data, path.graph=gR1, pathway.name=pathway.name[i],  map.cpdname=map.cpdname, split.group=split.group, limit=limit, bins=bins, both.dirs=both.dirs, discrete=discrete, low=low, mid=mid, high=high, na.col=na.col)
+    pv.pars= keggview.graph(plot.data.gene=plot.data.gene, cols.ts.gene=cols.ts.gene, 
+                            plot.data.cpd=plot.data.cpd, cols.ts.cpd=cols.ts.cpd, 
+                            node.data=node.data, path.graph=gR1, 
+                            pathway.name=pathway.name[i],  map.cpdname=map.cpdname, 
+                            split.group=split.group, limit=limit, bins=bins, 
+                            both.dirs=both.dirs, discrete=discrete, low=low, mid=mid, 
+                            high=high, na.col=na.col)
     
   }
   
