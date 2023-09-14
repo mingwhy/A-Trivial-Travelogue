@@ -47,14 +47,17 @@ if(!file.exists('all_mapped_pathways.rds')){
   df.all.pathway=data.frame(KEGGid=KEGGid,pathway=pathway)
   saveRDS(df.all.pathway,'all_mapped_pathways.rds')
 }
+df.all.pathway=readRDS('all_mapped_pathways.rds')
 ##########
 # download xml files from KEGG database
-length(unique(df.all.pathway$pathway)) #130
-for(i in unique(df.all.pathway$pathway)){
-  tempfile=paste0(gsub('path:','',i),'.xml')
-  #tempfile='dme00340.xml'; #file would be download and saved in this tempfile
-  if(!file.exists(tempfile)){
-    KEGGgraph::retrieveKGML(pathwayid="00340", organism="dme", destfile=tempfile,quiet=TRUE)
+if(F){
+  length(unique(df.all.pathway$pathway)) #130
+  for(i in unique(df.all.pathway$pathway)){
+    tempfile=paste0(gsub('path:','',i),'.xml')
+    #tempfile='dme00340.xml'; #file would be download and saved in this tempfile
+    if(!file.exists(tempfile)){
+      KEGGgraph::retrieveKGML(pathwayid="00340", organism="dme", destfile=tempfile,quiet=TRUE)
+    }
   }
 }
 # save xml files to kgml_xmls folder
@@ -249,3 +252,6 @@ for(target.mz in unique(all.pathways$KEGGid)){
 dev.off()
 
 unique(yes.mz) #only 4 metabolites have info
+#for example:https://www.genome.jp/pathway/map01240+C01081
+#C01081, no direct neighbors contain enzymes
+#but if we look at GEM: https://metabolicatlas.org/explore/Fruitfly-GEM/gem-browser/reaction/MAR04208
