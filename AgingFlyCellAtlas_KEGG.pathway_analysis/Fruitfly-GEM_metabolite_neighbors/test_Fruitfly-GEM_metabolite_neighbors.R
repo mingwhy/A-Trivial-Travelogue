@@ -83,6 +83,14 @@ names(dat[[1]])
 # tissue;cell.type;age, 4 age groups
 head(dat[[1]][[1]])
 gene.expr=dat;
+head(names(gene.expr[[1]][[1]]))
+
+## read in gene symbol mapping
+gene.meta=readRDS('~/Documents/Data_AgingFlyCellAtlas/AFCA_gene.id.rds')
+#gene.meta=readRDS('~/Documents/Data_AgingFlyCellAtlas/AFCA_gene.meta.rds')
+gene.meta=gene.meta[gene.meta$FLYBASE!='',]
+head(gene.meta)
+dup.names=names(which(table(gene.meta$original.id)>1))
 
 ##########################################################
 ## read in mz measurement data for trajectory comparison
@@ -105,7 +113,8 @@ share.mz=share.mz[share.mz!='']
 length(share.mz) #61
 
 mets.mapping[mets.mapping$metKEGGID=='C00388',] #Histamine
-
+cc=0; #how many mz is computable
+pdf('test.pdf')
 for(mz in share.mz){
   #mz='C00388';
   cat(mz,'\n')
@@ -115,7 +124,7 @@ for(mz in share.mz){
   #mz.age.betas[mz.age.betas$KEGGid==mz,]
   
   bait=match(ids,ifly$mets)
-  tmp=ifly$S[bait,]
+  tmp=ifly$S[bait,,drop=F]
   col.idx=which(Matrix::colSums(abs(tmp))!=0) #rxn target mz is involved
   #ifly$subSystems[col.idx] #there might be  "Exchange/demand reactions" and "Transport reactions"
   x=ifly$grRules[col.idx]
@@ -125,18 +134,70 @@ for(mz in share.mz){
   if(length(col.idx)==0){cat('Genes-associated-rxns not found\n');next}
   enzyme.genes=ifly$grRules[col.idx]
   
-  tmp=ifly$S[,col.idx]
+  tmp=ifly$S[,col.idx,drop=F]
   row.idx=which(Matrix::rowSums(abs(tmp))!=0) #metabolite these traget rxn requires
   tmp=ifly$S[row.idx,col.idx,drop=F]
   
   tmp=as.matrix(tmp)
   #rownames(tmp)=ifly$metNames[row.idx]
   rownames(tmp)=ifly$mets[row.idx]
-  colnames(tmp)=ifly$rxnNames[col.idx]
+  colnames(tmp)=ifly$rxns[col.idx]
   
   #combine ids to one metabolite and ignore stoi number, only keep 1, -1,0
-  tmp1=tmp;
-  cat('reaction with avaiable enzymes ',ncol(tmp1),'\n')
+  enzyme.gene.list=lapply(enzyme.genes,function(x){
+    substr(x,7, nchar(x)-2)
+  })
+  genes.with.expr.info=intersect(unlist(enzyme.gene.list) , gene.meta$original.id)
+  #cat('reaction with avaiable enzymes ',ncol(tmp),', gene ',length(genes.with.expr.info),'\n')
+  if(length(genes.with.expr.info)==0){cat('Genes-associated-rxns not found\n');next}
   #target.mz.row.ids<-match(ids,rownames(tmp))
   
+  i=match(rownames(tmp),mets.mapping$mets)
+  #mets.mapping[i,]$mets==rownames(tmp)
+  mets=unique(mets.mapping[i,]$metKEGGID)
+  tmp1=lapply(mets[mets!=''],function(met){
+    Matrix::colSums(tmp[mets.mapping[i,]$metKEGGID==met,,drop=F])
+  })
+  tmp2=as.matrix(Reduce(`rbind`,tmp1))
+  rownames(tmp2)=mets[mets!='']
+  
+  #if it's transport reactions, tmp1 would have column sum 0, eg, C01081
+  tmp2=tmp2[,colSums(abs(tmp2))!=0,drop=F]
+  tmp3=tmp2[,tmp2[which(rownames(tmp2)==mz),,drop=F]!=0,drop=F]
+  cat('reaction with avaiable enzymes ',ncol(tmp3),', gene ',length(genes.with.expr.info),'\n')
+  if(ncol(tmp3)!=0){cc=cc+1}
+  # create igraph object
+  all.df=lapply(1:ncol(tmp3),function(i){
+    #cat(i,'\n')
+    df=c()
+    x=tmp3[,i]
+    from=names(x[x<0])
+    if(length(from)!=0){
+      df=rbind(df,data.frame(from=from,to=enzyme.gene.list[[i]]))
+    }
+    to=names(x[x>0])
+    if(length(to)!=0){
+      df=rbind(df,data.frame(from=enzyme.gene.list[[i]],to=to))
+    }
+    df$reaction=colnames(tmp3)[i]
+    df
+  })
+  all.df2=as.data.frame(Reduce(`rbind`,all.df))
+  df.g=igraph::graph.data.frame(all.df2,directed=TRUE)
+    
+  v.names=igraph::V(df.g)$name
+  v.shapes=ifelse(v.names %in% rownames(tmp3), 'circle','square')
+  v.color=ifelse(v.names ==mz, 'orange','lightblue')
+  df.g$shapes=v.shapes;
+  df.g$color=v.color;
+  plot(df.g, vertex.shape=df.g$shapes,vertex.size=10,  #edge.color="darkgreen", edge.label=links$value,
+          vertex.label.font=1, vertex.color = df.g$color,
+       edge.arrow.size=0.5,edge.width=1,
+         vertex.label.cex = 1 , layout=igraph::layout_with_gem,#layout=igraph::layout.fruchterman.reingold,
+        #main=paste0(mz,', ',colnames(tmp3)[i]))
+       main=paste0(mz))
+    
 }
+dev.off()
+
+cc #53
