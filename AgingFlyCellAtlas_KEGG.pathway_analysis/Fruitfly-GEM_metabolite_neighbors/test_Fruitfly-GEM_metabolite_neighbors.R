@@ -105,8 +105,9 @@ share.mz=share.mz[share.mz!='']
 length(share.mz) #61
 
 mets.mapping[mets.mapping$metKEGGID=='C00388',] #Histamine
+
 for(mz in share.mz){
-  mz='C00388';
+  #mz='C00388';
   cat(mz,'\n')
   # might be multiple ids due to different compartments
   ids=mets.mapping[mets.mapping$metKEGGID==mz,]$mets
@@ -126,7 +127,7 @@ for(mz in share.mz){
   
   tmp=ifly$S[,col.idx]
   row.idx=which(Matrix::rowSums(abs(tmp))!=0) #metabolite these traget rxn requires
-  tmp=ifly$S[row.idx,col.idx]
+  tmp=ifly$S[row.idx,col.idx,drop=F]
   
   tmp=as.matrix(tmp)
   #rownames(tmp)=ifly$metNames[row.idx]
@@ -135,7 +136,7 @@ for(mz in share.mz){
   
   #combine ids to one metabolite and ignore stoi number, only keep 1, -1,0
   tmp1=tmp;
-  
-  target.mz.row.ids<-match(ids,rownames(tmp))
+  cat('reaction with avaiable enzymes ',ncol(tmp1),'\n')
+  #target.mz.row.ids<-match(ids,rownames(tmp))
   
 }
