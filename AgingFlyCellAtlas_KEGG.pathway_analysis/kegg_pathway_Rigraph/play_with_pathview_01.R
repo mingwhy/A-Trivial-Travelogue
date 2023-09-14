@@ -23,8 +23,9 @@ pathway.id=gsub('hsa|_SIF','',my_producer$cluster)
   node.names=names(node.names)
   node.names=node.names[grep('cpd',node.names)]
   node.names
-  inp.cpd=rep(1,length(node.names))
-  names(inp.cpd)=gsub('cpd:','',node.names)
+  #inp.cpd=rep(1,length(node.names))
+  #names(inp.cpd)=gsub('cpd:','',node.names)
+  inp.cpd='C00388'
   my_producer$cluster #"hsa00340_SIF"
 
 ###############
@@ -273,7 +274,7 @@ pathway.id=gsub('hsa|_SIF','',my_producer$cluster)
                 message("Warning: ", warn.msg)
               } else {
 #                browser()
-                library(AnnotationDbi) #in `NAMESPACE`, to use `columns` function
+                library(AnnotationDbi) #in `NAMESPACE`, to use `columns` function in `eg2id`
                 plot.data.gene$labels=eg2id(as.character(plot.data.gene$kegg.names), 
                                             category="SYMBOL", pkg.name=gene.annotpkg)[,2]
                 mapped.gnodes=rownames(plot.data.gene)

@@ -2,12 +2,14 @@ library(pathview)
 library(XML)
 library(graph) #use graph not igraph!!!
 library(KEGGgraph)
+library(tidyverse)
 (files=Sys.glob('pathview_Rscripts/*'))
 #for(file in files){source(file)}
 ###########################
 # get all kegg pathway names of a species
 # https://support.bioconductor.org/p/109871/
 if(F){
+library(KEGGREST)
 dme_all_path  <- keggLink("pathway", "dme") %>% 
   tibble(pathway = ., eg = sub("dme:", "", names(.)))
 dme_all_pathways=unique(dme_all_path$pathway)
@@ -46,7 +48,8 @@ if(!file.exists(tempfile)){
 #}
 
 ## now, `parseKGML2.R`
-file='hsa00340.xml'
+#file='hsa00340.xml'
+file='dme00340.xml'
 doc <- XML::xmlTreeParse(file, getDTD = FALSE)
 r <- xmlRoot(doc)
 childnames <- sapply(xmlChildren(r), xmlName)
@@ -130,7 +133,7 @@ if (genesOnly) {
 #return(gR)
 gR
 
-######################################################3
+######################################################
 # R package graph, https://bioconductor.org/packages/release/bioc/html/graph.html
 #https://bioconductor.org/packages/release/bioc/vignettes/graph/inst/doc/GraphClass.html
 #nodes(gR);edges(gR);degree(gR) #inDegree, outDegree
@@ -138,8 +141,74 @@ gR
 
 node.data=try(node.info(gR), silent=T)
 table(node.data$type)
+length(node.data$kegg.names) #88 nodes
 
+type.sel=node.data$type %in% c('compound')
+node.data$kegg.names[type.sel]
+
+i=which(node.data$kegg.names=='C00388')
+names(node.data$kegg.names[i]) #'99', C00388
+adj(gR,'99') #only out-neighbors of C00388
+
+edges=edgeData(gR)
+edges[grep('99',names(edges))] 
+
+# map genes, use node.map function in pathview
+gene.node.type='gene'
+gene.data=NULL
 plot.data.gene=node.map(gene.data, node.data,
-                        node.types=gene.node.type, node.sum=node.sum, 
-                        entrez.gnodes=entrez.gnodes)
+                        node.types=gene.node.type, node.sum="sum", 
+                        entrez.gnodes=TRUE)
+head(plot.data.gene) #check if plot.data.gene already have labels column
+#rownames(plot.data.gene); #EntryID in kegg
+
+if(F){
+  library(AnnotationDbi) #in `NAMESPACE`, to use `columns` function in `eg2id`
+  plot.data.gene$labels=eg2id(as.character(plot.data.gene$kegg.names), 
+                              category="SYMBOL", pkg.name="org.Hs.eg.db")[,2]
+  mapped.gnodes=rownames(plot.data.gene) #EntryID in kegg
+  node.data$labels[mapped.gnodes]
+  plot.data.gene$labels
+  #node.data$labels[mapped.gnodes]=plot.data.gene$labels
+}
+
+# map compounds, use node.map function in pathview
+cpd.data='C00388'
+plot.data.cpd=node.map(cpd.data, node.data, node.types="compound", node.sum="sum")
+
+plot.data=rbind(plot.data.gene,plot.data.cpd)
+
+##
+i=which(node.data$kegg.names=='C00388')
+i
+target.mz.id=names(node.data$kegg.names[i]) #'99', C00388
+gi=igraph::graph_from_graphnel(gR) 
+
+out1=igraph::neighbors(gi,target.mz.id,mode='out') #gene, 1-step neighbor from target metabolite
+in1=igraph::neighbors(gi,target.mz.id,mode='in') #gene, 1-step neighbor from target metabolite
+vids=c(target.mz.id,out1$name,in1$name)
+if(length(out1)>0){
+  out2=unlist(lapply(out1$name,function(i){
+    x=igraph::neighbors(gi,i,mode='out') #compound, 2-step neighbor from target metabolite
+    x$name
+  }))
+  vids=c(vids,out2)
+}
+if(length(in1)>0){
+  in2=unlist(lapply(in1$name,function(i){
+    x=igraph::neighbors(gi,i,mode='in') #compound, 2-step neighbor from target metabolite
+    x$name
+  }))
+  vids=c(vids,in2)
+}
+sgi=igraph::induced_subgraph(gi, vids=vids)
+plot(sgi)
+igraph::V(sgi)$label=plot.data[igraph::V(sgi)$name,]$labels
+node.types=plot.data[igraph::V(sgi)$name,]$type
+node.shapes=ifelse(node.types=='gene','square','circle')
+       
+plot(sgi, vertex.shape=node.shapes,vertex.size=10, #vertex.color = 'lightblue', edge.color="darkgreen", edge.label=links$value,
+     vertex.label=igraph::V(sgi)$label, vertex.label.font=1, 
+     vertex.label.cex = 1 , layout=igraph::layout.fruchterman.reingold)
+
 
