@@ -73,18 +73,6 @@ rxns.mapping=data.table::fread('~/Documents/bioinfo_software/GEM_metabolic.model
 rxns.mapping[rxns.mapping$rxns=="MAR01442",]
 
 ########################################################
-## gene expression data
-dataset.name='fly.female'
-#dat=data.table::fread('log1p_female_gene.mean.expr.csv')
-dat=readRDS('log1p_female_gene.mean.expr.rds')
-length(dat) #27
-length(dat[[1]]) #4
-names(dat[[1]])
-# tissue;cell.type;age, 4 age groups
-head(dat[[1]][[1]])
-gene.expr=dat;
-head(names(gene.expr[[1]][[1]]))
-
 ## read in gene symbol mapping
 gene.meta=readRDS('~/Documents/Data_AgingFlyCellAtlas/AFCA_gene.id.rds')
 #gene.meta=readRDS('~/Documents/Data_AgingFlyCellAtlas/AFCA_gene.meta.rds')
@@ -113,7 +101,8 @@ share.mz=share.mz[share.mz!='']
 length(share.mz) #61
 
 mets.mapping[mets.mapping$metKEGGID=='C00388',] #Histamine
-cc=0; #how many mz is computable
+mz_gene_list=list()
+
 pdf('test.pdf')
 for(mz in share.mz){
   #mz='C00388';
@@ -165,7 +154,7 @@ for(mz in share.mz){
   tmp2=tmp2[,colSums(abs(tmp2))!=0,drop=F]
   tmp3=tmp2[,tmp2[which(rownames(tmp2)==mz),,drop=F]!=0,drop=F]
   cat('reaction with avaiable enzymes ',ncol(tmp3),', gene ',length(genes.with.expr.info),'\n')
-  if(ncol(tmp3)!=0){cc=cc+1}
+  
   # create igraph object
   all.df=lapply(1:ncol(tmp3),function(i){
     #cat(i,'\n')
@@ -183,8 +172,9 @@ for(mz in share.mz){
     df
   })
   all.df2=as.data.frame(Reduce(`rbind`,all.df))
+  mz_gene_list[[mz]]=all.df2
+  
   df.g=igraph::graph.data.frame(all.df2,directed=TRUE)
-    
   v.names=igraph::V(df.g)$name
   v.shapes=ifelse(v.names %in% rownames(tmp3), 'circle','square')
   v.color=ifelse(v.names ==mz, 'orange','lightblue')
@@ -200,4 +190,5 @@ for(mz in share.mz){
 }
 dev.off()
 
-cc #53
+length(mz_gene_list) #53
+saveRDS(mz_gene_list,'mz_gene_list.rds')
