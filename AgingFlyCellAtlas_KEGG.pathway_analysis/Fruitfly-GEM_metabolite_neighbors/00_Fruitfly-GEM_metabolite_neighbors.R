@@ -103,7 +103,7 @@ length(share.mz) #61
 mets.mapping[mets.mapping$metKEGGID=='C00388',] #Histamine
 mz_gene_list=list()
 
-pdf('test.pdf')
+pdf('metabolite_genes_graph.pdf')
 for(mz in share.mz){
   #mz='C00388';
   cat(mz,'\n')
