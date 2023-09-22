@@ -180,13 +180,33 @@ for(mz in share.mz){
   v.color=ifelse(v.names ==mz, 'orange','lightblue')
   df.g$shapes=v.shapes;
   df.g$color=v.color;
-  plot(df.g, vertex.shape=df.g$shapes,vertex.size=10,  #edge.color="darkgreen", edge.label=links$value,
-          vertex.label.font=1, vertex.color = df.g$color,
+  if(F){
+    plot(df.g, vertex.shape=df.g$shapes,vertex.size=10,  #edge.color="darkgreen", edge.label=links$value,
+            vertex.label.font=1, vertex.color = df.g$color,
+         edge.arrow.size=0.5,edge.width=1,
+           vertex.label.cex = 1 , layout=igraph::layout_with_gem,#layout=igraph::layout.fruchterman.reingold,
+          #main=paste0(mz,', ',colnames(tmp3)[i]))
+         main=paste0(mz))
+  }
+  
+  #https://stackoverflow.com/questions/56681625/plot-vertex-with-two-labels-one-inside-and-the-other-out-side-the-vertex
+  ## Now generate a layout for the vertices so that we 
+  ## can refer to the absolute position of the nodes
+  LO = igraph::layout_nicely(df.g)
+  LO[,1] = (LO[,1] - min(LO[,1])) / (max(LO[,1]) - min(LO[,1]))
+  LO[,2] = (LO[,2] - min(LO[,2])) / (max(LO[,2]) - min(LO[,2]))
+  LO = 2*LO - 1
+  
+  ## Plot and add the extra labels
+  plot(df.g, layout=LO, rescale=F, vertex.label= NA,
+       vertex.shape=df.g$shapes,vertex.size=10,  #edge.color="darkgreen", edge.label=links$value,
+       vertex.label.font=1, vertex.color = df.g$color,
        edge.arrow.size=0.5,edge.width=1,
-         vertex.label.cex = 1 , layout=igraph::layout_with_gem,#layout=igraph::layout.fruchterman.reingold,
-        #main=paste0(mz,', ',colnames(tmp3)[i]))
+       vertex.label.cex = 1 , layout=igraph::layout_with_gem,#layout=igraph::layout.fruchterman.reingold,
+       #main=paste0(mz,', ',colnames(tmp3)[i]))
        main=paste0(mz))
-    
+  text(LO, labels=igraph::V(df.g)$name, pos=1, offset=1.5)
+  
 }
 dev.off()
 
