@@ -5,10 +5,10 @@ library(tidyverse)
 ###################################################################  
 ## per mz, per cell.type, select the connected genes with the max cor with metabolome
 ## record the chosen gene, and record observed P value
-all.mz.out=readRDS('bootstrap_log1p_expr.rds')
+all.mz.out=readRDS('bootstrap_log1p_expr_remove0.rds')
 names(all.mz.out) #53 mz, gene expression
 
-obs=readRDS('obs_metabolome_sc_trajectory.rds')
+obs=readRDS('obs_metabolome_sc_trajectory_remove0.rds')
 length(obs) # n.mz
 head(obs[[1]]) #cell.type, selected.best.fitted gene
 
@@ -37,9 +37,11 @@ dim(mz.age.betas) #86
 factorial(6) #720
 n.rep=100; #rep100, 5min, rep200，10min
 
-mz.permu.out=list()
+out.file='shuffle_metabolome_out.rds'
+if(file.exists(out.file)){mz.permu.out=readRDS(out.file)}else{mz.permu.out=list()}
 
-pdf('permu_metabolome_head_body_out.pdf',useDingbats = T,height = 9,width = 14)
+#pdf('permu_metabolome_head_body_out.pdf',useDingbats = T,height = 9,width = 14)
+pdf('permu_metabolome_head_body_out_remove0.pdf',useDingbats = T,height = 9,width = 14)
 for(mz in names(all.mz.out)){
   #for(mz in names(all.mz.out)[1:2]){
   cat(mz,'\n')
@@ -59,45 +61,48 @@ for(mz in names(all.mz.out)){
   #tmp=expand.grid(unique(df.one.mz$cell.type),unique(df.one.mz$gene))
   obs.gene.cor=obs[[mz]] #observed correlation values across cell types
   
-  permu.out<-lapply(1:n.rep,function(irep){
-    df.met.pseudo=df.met;
-    x1=unique(as.character(df.met.pseudo$age));
-    x2=sample(x1)
-    names(x2)=x1
-    df.met.pseudo$new.age=x2[as.character(df.met.pseudo$age)]
-    #table(df.met.pseudo$age,df.met.pseudo$new.age)
-    df.met.pseudo$age=as.numeric(as.character( df.met.pseudo$new.age))
-    
-    fit.metabolome.pseudo=loess(value ~ age, data=df.met.pseudo, span=1)
-    newd.pseudo <- data.frame(age=0:90)
-    newd.pseudo$pred <- predict(fit.metabolome.pseudo, newd.pseudo)
-    newd.pseudo$dat='mz'
-    
-    tmp=obs.gene.cor;
-    cor.values=apply(tmp,1,function(row){
-      df1=subset(df.one.mz, cell.type==row[[1]] & gene==row[[2]])
-      df1$age=as.numeric(as.character(df1$age))
-      fit.sc=loess(expr.values ~ age, data=df1, span=1)
-      if(is.null(fit.sc) || is.nan(fit.sc$residuals[1])){return(NA)}
+  if(file.exists(out.file)){
+    df.permu.out<-mz.permu.out[[mz]]
+  }else{
+    permu.out<-lapply(1:n.rep,function(irep){
+      df.met.pseudo=df.met;
+      x1=unique(as.character(df.met.pseudo$age));
+      x2=sample(x1)
+      names(x2)=x1
+      df.met.pseudo$new.age=x2[as.character(df.met.pseudo$age)]
+      #table(df.met.pseudo$age,df.met.pseudo$new.age)
+      df.met.pseudo$age=as.numeric(as.character( df.met.pseudo$new.age))
       
-      newd2 <- data.frame(age=0:90)
-      newd2$pred <- predict(fit.sc, newd2)
-      newd2$dat='sc'
-      #newdf=rbind(newd,newd2)
-      #ggplot(newdf,aes(x=age,y=pred,color=dat))+geom_point()+facet_wrap(.~dat,scale='free_y')+theme_classic(base_size = 15)
-      if(sd(newd2$pred,na.rm=T)<1e-22 | sd(newd$pred,na.rm=T)<1e-22){return(NA)}
-      cor.value=cor(newd2$pred, newd.pseudo$pred,use='complete')
-      return(cor.value)
+      fit.metabolome.pseudo=loess(value ~ age, data=df.met.pseudo, span=1)
+      newd.pseudo <- data.frame(age=0:90)
+      newd.pseudo$pred <- predict(fit.metabolome.pseudo, newd.pseudo)
+      newd.pseudo$dat='mz'
+      
+      tmp=obs.gene.cor;
+      cor.values=apply(tmp,1,function(row){
+        df1=subset(df.one.mz, cell.type==row[[1]] & gene==row[[2]])
+        df1$age=as.numeric(as.character(df1$age))
+        fit.sc=loess(expr.values ~ age, data=df1, span=1)
+        if(is.null(fit.sc) || is.nan(fit.sc$residuals[1])){return(NA)}
+        
+        newd2 <- data.frame(age=0:90)
+        newd2$pred <- predict(fit.sc, newd2)
+        newd2$dat='sc'
+        #newdf=rbind(newd,newd2)
+        #ggplot(newdf,aes(x=age,y=pred,color=dat))+geom_point()+facet_wrap(.~dat,scale='free_y')+theme_classic(base_size = 15)
+        if(sd(newd2$pred,na.rm=T)<1e-22 | sd(newd$pred,na.rm=T)<1e-22){return(NA)}
+        cor.value=cor(newd2$pred, newd.pseudo$pred,use='complete')
+        return(cor.value)
+      })
+      tmp$cor.coeff=cor.values
+      colnames(tmp)=c('cell.type','gene','cor.coeff')
+      tmp$irep=irep;
+      tmp
     })
-    tmp$cor.coeff=cor.values
-    colnames(tmp)=c('cell.type','gene','cor.coeff')
-    tmp$irep=irep;
-    tmp
-  })
-  
-  df.permu.out=as.data.frame(Reduce(`rbind`,permu.out))
-  mz.permu.out[[mz]]<-df.permu.out;
-  
+    
+    df.permu.out=as.data.frame(Reduce(`rbind`,permu.out))
+    mz.permu.out[[mz]]<-df.permu.out;
+  }
   #calculate P value across cell types
   par(mfrow=c(5,6))
   for(cell.type in unique(obs.gene.cor$cell.type)){
@@ -127,7 +132,10 @@ for(mz in names(all.mz.out)){
 
 dev.off()
 
-saveRDS(mz.permu.out,'shuffle_metabolome_out.rds')
+if(!file.exists(out.file)){
+  saveRDS(mz.permu.out,'shuffle_metabolome_out.rds')
+}
+
 
 
 
