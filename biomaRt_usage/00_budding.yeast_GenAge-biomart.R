@@ -21,7 +21,7 @@ scaleFUN <- function(x) sprintf("%.3f", x)
 ## get yeast - mouse orthologs
 if(F){
   library(biomaRt)
-  yeast= useEnsembl(version = 99, #this archived still contain dn ds values
+  yeast= useEnsembl(#version = 99, #this archived still contain dn ds values
                     biomart = 'ENSEMBL_MART_ENSEMBL', 
                     dataset = 'scerevisiae_gene_ensembl')
   
@@ -32,14 +32,15 @@ if(F){
   
   yeast_mouse <- getBM(attributes = c('ensembl_gene_id', 
                                     'mmusculus_homolog_ensembl_gene',  
-                                    'mmusculus_homolog_dn', 
-                                    'mmusculus_homolog_ds',
+                                    #'mmusculus_homolog_dn', 
+                                    #'mmusculus_homolog_ds',
+                                    'mmusculus_homolog_associated_gene_name',
                                     'mmusculus_homolog_orthology_type',
                                     'mmusculus_homolog_orthology_confidence'), 
                      mart = yeast)
   head(yeast_mouse)
   yeast_mouse=yeast_mouse[yeast_mouse$mmusculus_homolog_ensembl_gene!='',]
-  dim(yeast_mouse) #5909     5
+  dim(yeast_mouse) #6831     5
   
   library(org.Mm.eg.db)
   yeast_mouse$mmusculus_entrezid=mapIds(org.Mm.eg.db, keys = yeast_mouse$mmusculus_homolog_ensembl_gene, keytype="ENSEMBL", column = "ENTREZID")
@@ -47,6 +48,9 @@ if(F){
   data.table::fwrite(yeast_mouse,'yeast_mouse_orthologs.txt')
 }
 yeast_mouse=data.table::fread('yeast_mouse_orthologs.txt')
+table(yeast_mouse$mmusculus_homolog_orthology_confidence)
+yeast_mouse=yeast_mouse[yeast_mouse$mmusculus_homolog_orthology_confidence==1,]
+table(yeast_mouse$mmusculus_homolog_orthology_type)
 
 #########################################################
 ## get anti-aging genes from genAge database(when del, lifespan extends)
@@ -59,10 +63,11 @@ table(genage_models$Method)
 table(genage_models$`Lifespan Effect`)
 table(genage_models$`Longevity Influence`)
 
-# ??? anti or pro genes
+# ??? anti(del,lifespan increase) or pro(overexpr, lifespan increase) genes, fitness (del, lifespan decrease)
 #del.genes<-genage_models[genage_models$Method %in% c('Deletion','depletion','Knockout','RNA interference') & genage_models$`Lifespan Effect`=='increase',]
-del.genes=genage_models[genage_models$`Longevity Influence`=='anti',]
+#del.genes=genage_models[genage_models$`Longevity Influence`=='anti',]
 #del.genes=genage_models[genage_models$`Longevity Influence`=='pro',]
+del.genes=genage_models[genage_models$`Longevity Influence`=='fitness',]
 dim(del.genes) #434
 table(del.genes$`Longevity Influence`)
 
@@ -72,33 +77,33 @@ table(del.genes$`Longevity Influence`)
 
 # merge with ortholog data
 i=(del.genes$`Ensembl ID` %in% yeast_mouse$ensembl_gene_id)
-sum(i)  #187
+sum(i)  #98
 del.genes.keep=del.genes[i,]
 
 gene.set=yeast_mouse[yeast_mouse$ensembl_gene_id %in% del.genes$`Ensembl ID`,]
-dim(gene.set) #370
-length(unique(gene.set$ensembl_gene_id)) #144
-length(unique(gene.set$mmusculus_homolog_ensembl_gene)) #321
+dim(gene.set) #97
+length(unique(gene.set$ensembl_gene_id)) #68
+length(unique(gene.set$mmusculus_homolog_ensembl_gene)) #92
 table(gene.set$mmusculus_homolog_orthology_type)
 #ortholog_many2many  ortholog_one2many   ortholog_one2one 
-#226                100                 44 
+#31                 43                 23 
 
 # ??? what type of orthologs
 #gene.set=gene.set[gene.set$mmusculus_homolog_orthology_type=='ortholog_one2one',]
 gene.set=gene.set[gene.set$mmusculus_homolog_orthology_confidence==1,] #100
 #gene.set=gene.set[gene.set$mmusculus_homolog_orthology_confidence==1 & 
-#                    gene.set$mmusculus_homolog_orthology_type=='ortholog_one2one',] #100
-                    #gene.set$mmusculus_homolog_orthology_type=='ortholog_one2many',] #100
-                    #gene.set$mmusculus_homolog_orthology_type=='ortholog_many2many',] #100
+                   #gene.set$mmusculus_homolog_orthology_type=='ortholog_one2one',] #100
+                   #gene.set$mmusculus_homolog_orthology_type=='ortholog_one2many',] #100
+                   #gene.set$mmusculus_homolog_orthology_type=='ortholog_many2many',] #100
 ###########################################################
 ## reading in gene id.mapping in mouse aging atlas data
 id.mapping=data.table::fread('~/Documents/Data_mouse_aging_atlas/fac_20449genes_id.mapping.txt')  #readin_h5ad.R
 gene.meta=id.mapping
 
-dim(gene.set) #24
+dim(gene.set) #90
 sum(gene.set$mmusculus_homolog_ensembl_gene %in% gene.meta$ensembl_gene_id) #40
 gene.set2=merge(gene.set,gene.meta,by.x='mmusculus_homolog_ensembl_gene',by.y='ensembl_gene_id')
-dim(gene.set2) #21
+dim(gene.set2) #90
 
 ####################################
 ## read in mouse turnover rate data
@@ -115,7 +120,8 @@ tc.orders #39 tc
 #output_file=paste0('log1p_budding.yeast_one2one.rds');
 #output_file=paste0('log1p_budding.yeast_confidence1_one2many.rds');
 #output_file=paste0('log1p_budding.yeast_confidence1_many2many.rds');
-output_file=paste0('log1p_budding.yeast_confidence1.rds');
+#output_file=paste0('log1p_budding.yeast_confidence1.rds');
+output_file=paste0('log1p_budding.yeast_fitness_confidence1.rds');
 #output_file=paste0('log1p_budding.yeast_pro_confidence1.rds');
 #output_file=paste0('cpm_budding.yeast_confidence1_one2one.rds');
 #output_file=paste0('select.tc.h5ad_log1p_budding.yeast_out.rds');

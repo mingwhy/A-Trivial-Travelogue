@@ -93,10 +93,10 @@ tc.orders #39 tc
 
 #####################################################################################
 ## use expression proportion (remember to change `expr.m=expr.m[,tmp$age==___ ]`)
-#output_file=paste0('log1p_fission.yeast_long.lived_RankHigh.rds');
-#gene.set2=gene.set[gene.set$effect=='long.lived',]
-output_file=paste0('log1p_fission.yeast_short.lived_RankHigh.rds');
-gene.set2=gene.set[gene.set$effect=='short.lived',]
+output_file=paste0('log1p_fission.yeast_long.lived_RankHigh.rds');
+gene.set2=gene.set[gene.set$effect=='long.lived',]
+#output_file=paste0('log1p_fission.yeast_short.lived_RankHigh.rds');
+#gene.set2=gene.set[gene.set$effect=='short.lived',]
 
 if(!file.exists(output_file)){
   
